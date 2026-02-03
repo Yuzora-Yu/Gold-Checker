@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Gold Analysis</title>
+    <script src="https://s3.tradingview.com/tv.js"></script>
+</head>
+<body style="background: #131722; color: white;">
+    <h1>Gold (XAU/USD) Analysis</h1>
+    <div id="status">読み込み中...</div>
+    <div id="chart" style="height: 500px;"></div>
+
+    <script>
+        // TradingViewチャートの埋め込み
+        new TradingView.widget({
+            "container_id": "chart",
+            "symbol": "OANDA:XAUUSD",
+            "interval": "60",
+            "theme": "dark",
+            "autosize": true
+        });
+
+        // GitHub Actionsが生成したJSONを読み込む
+        fetch('./data.json')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('status').innerHTML = 
+                    `最終更新: ${data.update_time} | 価格: $${data.price} | RSI: ${data.rsi}`;
+            });
+    </script>
+</body>
+</html>
