@@ -1,0 +1,28 @@
+name: Gold Update Bot
+on:
+  schedule:
+    - cron: '0 * * * *' # 1時間に1回実行 (無料枠を考慮)
+  workflow_dispatch: # 手動実行ボタンも作成
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: pip install yfinance pandas requests
+      - name: Run analysis
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: python analyze.py
+      - name: Commit and Push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data.json
+          git commit -m "Update Gold Data" || exit 0
+          git push
