@@ -1,19 +1,19 @@
 {
-    "price": 4966.9,
-    "rsi": 78.16,
-    "deviation": 2.02,
+    "price": 4967.5,
+    "rsi": 74.74,
+    "deviation": 1.95,
     "correlation": 0.0,
-    "score": -72,
-    "score_1h": -72,
+    "score": -66,
+    "score_1h": -66,
     "score_4h": 15,
     "is_golden": false,
     "is_death": false,
     "vol_spike": false,
     "trend_4h": "上昇",
-    "resistance": 5082.5,
+    "resistance": 5045.0,
     "support": 4670.0,
     "status": "戻り売り",
-    "reason": "短期乖離 2.0%。長期上昇トレンド調整。",
-    "buy_ratio": 78,
-    "update_time": "2026-02-07 01:01"
+    "reason": "短期乖離 1.9%。長期上昇トレンド調整。",
+    "buy_ratio": 74,
+    "update_time": "2026-02-07 02:02"
 }
