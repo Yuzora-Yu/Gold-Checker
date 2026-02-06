@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Prisma Gold Pro - Multi-Factor Analysis</title>
+    <title>Prisma Gold Pro - Elite Dashboard</title>
     <script src="https://s3.tradingview.com/tv.js"></script>
     <style>
         :root {
@@ -25,7 +25,7 @@
             transition: background-color 0.5s ease;
         }
 
-        /* 中央上部：判定インジケーター */
+        /* ヘッダー：ダブルスコア表示に拡張 */
         .score-center-panel {
             display: flex;
             justify-content: center;
@@ -37,40 +37,38 @@
         }
 
         .score-display { text-align: center; }
-        .score-value { font-size: 48px; font-weight: bold; line-height: 1; }
-        .score-label { font-size: 12px; color: #848e9c; margin-top: 5px; }
+        .score-value { font-size: 38px; font-weight: bold; line-height: 1; }
+        .score-label { font-size: 11px; color: #848e9c; margin-top: 5px; }
 
         /* メインレイアウト */
         .dashboard-main { display: flex; flex: 1; overflow: hidden; }
 
-        /* 左側：チャートエリア */
+        /* 左側：チャート + 経済指標 */
         .charts-container { display: flex; flex-direction: column; flex: 1; border-right: 1px solid var(--border-color); }
-        #gold-chart { flex: 2; }
-        #dxy-chart { flex: 0.8; border-top: 1px solid var(--border-color); }
+        #gold-chart { flex: 1.5; }
+        .bottom-widgets { display: flex; height: 250px; border-top: 1px solid var(--border-color); }
+        #dxy-chart { flex: 1; }
+        #economic-calendar { flex: 1; border-left: 1px solid var(--border-color); }
 
         /* 右側：サイドパネル */
-        .side-panel { width: 300px; display: flex; flex-direction: column; background: var(--panel-bg); padding: 15px; gap: 20px; }
+        .side-panel { width: 300px; display: flex; flex-direction: column; background: var(--panel-bg); padding: 15px; gap: 15px; overflow-y: auto; }
 
-        /* 圧力ゲージ */
+        /* S/Rカード */
+        .sr-card { padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border-left: 4px solid #848e9c; }
+        .sr-label { font-size: 10px; color: #848e9c; }
+        .sr-value { font-size: 18px; font-weight: bold; font-family: monospace; }
+
+        /* 既存の圧力ゲージ */
         .pressure-section { text-align: center; }
-        .gauge-container {
-            width: 100%; height: 20px; background: #363c4e; 
-            border-radius: 10px; overflow: hidden; display: flex; margin: 10px 0;
-        }
+        .gauge-container { width: 100%; height: 20px; background: #363c4e; border-radius: 10px; overflow: hidden; display: flex; margin: 10px 0; }
         #buy-bar { height: 100%; background: var(--buy-color); transition: width 0.8s ease; }
         #sell-bar { height: 100%; background: var(--sell-color); transition: width 0.8s ease; }
 
-        /* AIアドバイスカード */
-        .ai-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 15px;
-            border-left: 4px solid #848e9c;
-        }
+        /* 既存のアドバイスカード */
+        .ai-card { background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 15px; border-left: 4px solid #848e9c; }
         .ai-status { font-size: 20px; font-weight: bold; margin-bottom: 8px; }
-        .ai-reason { font-size: 14px; line-height: 1.5; color: #b2b5be; }
+        .ai-reason { font-size: 13px; line-height: 1.5; color: #b2b5be; }
         
-        /* アラートカラー状態 */
         body.chance-buy { background-color: #052e21; }
         body.chance-sell { background-color: #3d0e14; }
     </style>
@@ -80,10 +78,14 @@
     <div class="score-center-panel">
         <div class="score-display">
             <div id="main-score" class="score-value">0</div>
-            <div class="score-label">統合シグナルスコア (-100 〜 +100)</div>
+            <div class="score-label">短期スコア (1H)</div>
+        </div>
+        <div class="score-display">
+            <div id="score-4h" class="score-value">0</div>
+            <div class="score-label">長期スコア (4H)</div>
         </div>
         <div class="info-group">
-            <div id="price-display" style="font-size: 20px; font-weight: bold;">$0.00</div>
+            <div id="price-display" style="font-size: 22px; font-weight: bold;">$0.00</div>
             <div id="correlation-display" style="font-size: 12px; color: #848e9c;">DXY相関: 0.00</div>
         </div>
     </div>
@@ -91,10 +93,37 @@
     <div class="dashboard-main">
         <div class="charts-container">
             <div id="gold-chart"></div>
-            <div id="dxy-chart"></div>
+            <div class="bottom-widgets">
+                <div id="dxy-chart"></div>
+                <div id="economic-calendar">
+                    <div class="tradingview-widget-container">
+                        <div class="tradingview-widget-container__widget"></div>
+                        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
+                        {
+                          "colorTheme": "dark",
+                          "isTransparent": true,
+                          "width": "100%",
+                          "height": "100%",
+                          "locale": "ja",
+                          "importanceFilter": "-1,0,1",
+                          "countryFilter": "us,eu,jp"
+                        }
+                        </script>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="side-panel">
+            <div class="sr-card" style="border-left-color: var(--sell-color);">
+                <div class="sr-label">RESISTANCE (48h High)</div>
+                <div id="res-val" class="sr-value">0.00</div>
+            </div>
+            <div class="sr-card" style="border-left-color: var(--buy-color);">
+                <div class="sr-label">SUPPORT (48h Low)</div>
+                <div id="sup-val" class="sr-value">0.00</div>
+            </div>
+
             <div class="pressure-section">
                 <div class="score-label">市場勢力図 (BUY vs SELL)</div>
                 <div class="gauge-container">
@@ -109,21 +138,18 @@
                 <div id="ai-reason" class="ai-reason">データを読み込んでいます。</div>
             </div>
 
-            <div style="font-size: 11px; color: #5d606b; margin-top: auto;">
+            <div style="font-size: 10px; color: #5d606b; margin-top: auto;">
                 Update: <span id="last-update">--:--</span>
             </div>
         </div>
     </div>
 
     <script>
-        // 1. TradingView ウィジェット初期化
-        // 金チャート (メイン)
         new TradingView.widget({
             "container_id": "gold-chart",
             "autosize": true,
             "symbol": "OANDA:XAUUSD",
             "interval": "15",
-            "timezone": "Asia/Tokyo",
             "theme": "dark",
             "style": "1",
             "locale": "ja",
@@ -131,13 +157,11 @@
             "hide_side_toolbar": false
         });
 
-        // ドル指数チャート (相関監視用)
         new TradingView.widget({
             "container_id": "dxy-chart",
             "autosize": true,
             "symbol": "CAPITALCOM:DXY",
             "interval": "15",
-            "timezone": "Asia/Tokyo",
             "theme": "dark",
             "style": "2",
             "locale": "ja",
@@ -145,41 +169,45 @@
             "hide_legend": true
         });
 
-        // 2. データ更新ロジック
         async function refreshData() {
             try {
                 const response = await fetch('./data.json?' + Date.now());
                 const data = await response.json();
 
-                // スコアと価格の更新
-                const score = data.score;
-                const scoreElem = document.getElementById('main-score');
-                scoreElem.textContent = (score > 0 ? '+' : '') + score;
+                // 1Hスコア更新
+                const score1h = data.score_1h;
+                const scoreElem1h = document.getElementById('main-score');
+                scoreElem1h.textContent = (score1h > 0 ? '+' : '') + score1h;
+                scoreElem1h.style.color = score1h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
+
+                // 4Hスコア更新
+                const score4h = data.score_4h;
+                const scoreElem4h = document.getElementById('score-4h');
+                scoreElem4h.textContent = (score4h > 0 ? '+' : '') + score4h;
+                scoreElem4h.style.color = score4h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
+
+                // 価格・相関・S/R
                 document.getElementById('price-display').textContent = `$${data.price.toLocaleString()}`;
                 document.getElementById('correlation-display').textContent = `DXY相関: ${data.correlation}`;
+                document.getElementById('res-val').textContent = data.resistance;
+                document.getElementById('sup-val').textContent = data.support;
                 document.getElementById('last-update').textContent = data.update_time;
 
-                // スコアによる配色変更
-                scoreElem.style.color = score > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
-                
-                // 背景アラートカラー
+                // 背景アラート
                 document.body.classList.remove('chance-buy', 'chance-sell');
-                if (score >= 70) document.body.classList.add('chance-buy');
-                if (score <= -70) document.body.classList.add('chance-sell');
+                if (score1h >= 70) document.body.classList.add('chance-buy');
+                if (score1h <= -70) document.body.classList.add('chance-sell');
 
-                // 圧力ゲージ更新
+                // ゲージ・AIカード (既存処理)
                 const buyP = data.buy_ratio;
                 document.getElementById('buy-bar').style.width = buyP + '%';
                 document.getElementById('sell-bar').style.width = (100 - buyP) + '%';
                 document.getElementById('pressure-text').textContent = `${buyP}% / ${100 - buyP}%`;
 
-                // AIアドバイスカード更新
                 const card = document.getElementById('ai-advice-card');
                 document.getElementById('ai-status').textContent = data.status;
                 document.getElementById('ai-reason').textContent = data.reason;
-                
-                // カードの枠線色変更
-                card.style.borderLeftColor = score > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
+                card.style.borderLeftColor = score1h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
 
             } catch (e) {
                 console.error("Data Fetch Error:", e);
@@ -187,7 +215,7 @@
         }
 
         refreshData();
-        setInterval(refreshData, 60000); // 1分更新
+        setInterval(refreshData, 60000);
     </script>
 </body>
 </html>
