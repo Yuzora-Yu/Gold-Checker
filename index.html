@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Prisma Gold Pro - Elite Dashboard</title>
+    <title>Prisma Gold Elite - Multi-Factor Analysis</title>
     <script src="https://s3.tradingview.com/tv.js"></script>
     <style>
         :root {
@@ -26,7 +26,7 @@
             transition: background-color 0.5s ease;
         }
 
-        /* ヘッダー：ダブルスコア表示 */
+        /* ヘッダー：ダブルスコアリング */
         .score-center-panel {
             display: flex;
             justify-content: center;
@@ -44,7 +44,7 @@
         /* メインレイアウト */
         .dashboard-main { display: flex; flex: 1; overflow: hidden; }
 
-        /* 左側：チャート + 経済指標 */
+        /* 左側：チャートエリア + 経済指標 */
         .charts-container { display: flex; flex-direction: column; flex: 1; border-right: 1px solid var(--border-color); }
         #gold-chart { flex: 1.5; }
         .bottom-widgets { display: flex; height: 250px; border-top: 1px solid var(--border-color); }
@@ -73,7 +73,7 @@
         /* 手動更新セクション */
         .update-card { background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 8px; border-left: 4px solid var(--update-color); }
         .update-input { width: 92%; background: #131722; border: 1px solid var(--border-color); color: white; font-size: 12px; padding: 5px; margin-bottom: 5px; border-radius: 4px; outline: none; }
-        .update-btn { width: 100%; background: var(--update-color); border: none; color: white; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
+        .update-btn { width: 100%; background: var(--update-color); border: none; color: white; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .update-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
         body.chance-buy { background-color: #052e21; }
@@ -159,7 +159,6 @@
     </div>
 
     <script>
-        // TradingView ウィジェット初期化
         new TradingView.widget({
             "container_id": "gold-chart",
             "autosize": true,
@@ -187,22 +186,21 @@
         // ページ読み込み時にトークンを復元
         document.getElementById('gh-token').value = localStorage.getItem('gh_pat') || '';
 
-        // データ更新ロジック
         async function refreshData() {
             try {
                 const response = await fetch('./data.json?' + Date.now());
                 const data = await response.json();
 
-                // スコア更新
-                const score1h = data.score_1h;
+                // 1H・4Hスコア更新
+                const s1h = data.score_1h;
                 const scoreElem1h = document.getElementById('main-score');
-                scoreElem1h.textContent = (score1h > 0 ? '+' : '') + score1h;
-                scoreElem1h.style.color = score1h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
+                scoreElem1h.textContent = (s1h > 0 ? '+' : '') + s1h;
+                scoreElem1h.style.color = s1h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
 
-                const score4h = data.score_4h;
+                const s4h = data.score_4h;
                 const scoreElem4h = document.getElementById('score-4h');
-                scoreElem4h.textContent = (score4h > 0 ? '+' : '') + score4h;
-                scoreElem4h.style.color = score4h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
+                scoreElem4h.textContent = (s4h > 0 ? '+' : '') + s4h;
+                scoreElem4h.style.color = s4h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
 
                 // 価格・相関・S/R
                 document.getElementById('price-display').textContent = `$${data.price.toLocaleString()}`;
@@ -213,8 +211,8 @@
 
                 // 背景色アラート
                 document.body.classList.remove('chance-buy', 'chance-sell');
-                if (score1h >= 70) document.body.classList.add('chance-buy');
-                if (score1h <= -70) document.body.classList.add('chance-sell');
+                if (s1h >= 70) document.body.classList.add('chance-buy');
+                if (s1h <= -70) document.body.classList.add('chance-sell');
 
                 // ゲージ・AIカード
                 const buyP = data.buy_ratio;
@@ -225,23 +223,17 @@
                 const card = document.getElementById('ai-advice-card');
                 document.getElementById('ai-status').textContent = data.status;
                 document.getElementById('ai-reason').textContent = data.reason;
-                card.style.borderLeftColor = score1h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
+                card.style.borderLeftColor = s1h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
 
-            } catch (e) {
-                console.error("Data Fetch Error:", e);
-            }
+            } catch (e) { console.error(e); }
         }
 
-        // GitHub Actions 実行トリガー
         async function triggerWorkflow() {
             const token = document.getElementById('gh-token').value;
             const status = document.getElementById('update-status');
             const btn = document.getElementById('btn-update');
 
-            if (!token) {
-                alert("GitHubトークンを入力してください");
-                return;
-            }
+            if (!token) { alert("GitHubトークンを入力してください"); return; }
 
             localStorage.setItem('gh_pat', token);
             status.textContent = "実行リクエスト送信中...";
@@ -264,10 +256,7 @@
 
                 if (response.status === 204) {
                     status.textContent = "✅ 送信成功！(反映待ち)";
-                    setTimeout(() => { 
-                        status.textContent = "待機中"; 
-                        btn.disabled = false; 
-                    }, 10000);
+                    setTimeout(() => { status.textContent = "待機中"; btn.disabled = false; }, 10000);
                 } else {
                     const err = await response.json();
                     status.textContent = "❌ Error: " + (err.message || "失敗");
@@ -280,7 +269,7 @@
         }
 
         refreshData();
-        setInterval(refreshData, 60000); // 1分更新
+        setInterval(refreshData, 60000);
     </script>
 </body>
 </html>

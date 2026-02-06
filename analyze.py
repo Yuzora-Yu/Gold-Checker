@@ -71,10 +71,11 @@ def analyze():
         # ATR (1h)
         atr_series = (high_1h - low_1h).rolling(window=14).mean()
 
-        # 長期(4h)トレンド計算
+        # 長期(4h)トレンド計算 (エラー箇所修正)
         close_4h = df_gold_4h['Close']
         ma20_4h = close_4h.rolling(window=20).mean() # 4時間足20MA
-        trend_4h = "上昇" if close_4h.iloc[-1].item() > ma_long_val := ma20_4h.iloc[-1].item() else "下落"
+        ma_long_val = ma20_4h.iloc[-1].item()
+        trend_4h = "上昇" if close_4h.iloc[-1].item() > ma_long_val else "下落"
         
         # 4h RSI(14)
         delta_4h = close_4h.diff()
@@ -107,10 +108,10 @@ def analyze():
         if atr_expanding: score_1h *= 1.2
         final_score_1h = int(max(min(score_1h, 100), -100))
 
-        # 長期スコア (4h RSIをベースに算出)
+        # 長期スコア
         final_score_4h = int(max(min((50 - rsi_4h_val) * 2, 100), -100))
 
-        # AIコメント (長期トレンドを加味)
+        # AIコメント
         if final_score_1h > 30:
             status = "押し目買い"
             reason = f"短期RSI {latest_rsi:.1f}。長期{trend_4h}トレンドの中での反発。"
@@ -133,9 +134,9 @@ def analyze():
             "rsi": round(latest_rsi, 2),
             "deviation": round(latest_dev, 2),
             "correlation": round(correlation, 2) if not np.isnan(correlation) else 0.0,
-            "score": final_score_1h,         # 既存互換用
-            "score_1h": final_score_1h,      # 短期
-            "score_4h": final_score_4h,      # 長期
+            "score": final_score_1h,
+            "score_1h": final_score_1h,
+            "score_4h": final_score_4h,
             "trend_4h": trend_4h,
             "resistance": round(resistance, 2),
             "support": round(support, 2),
