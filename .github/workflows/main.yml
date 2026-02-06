@@ -1,8 +1,6 @@
 name: Gold Update Bot
 on:
-  schedule:
-    - cron: '0 * * * *' # 1時間に1回実行 (無料枠を考慮)
-  workflow_dispatch: # 手動実行ボタンも作成
+  workflow_dispatch: # 手動実行のみに変更（自動起動を停止）
 
 jobs:
   build:
@@ -14,10 +12,8 @@ jobs:
         with:
           python-version: '3.9'
       - name: Install dependencies
-        run: pip install yfinance pandas requests
+        run: pip install yfinance pandas
       - name: Run analysis
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: python analyze.py
       - name: Commit and Push
         run: |
