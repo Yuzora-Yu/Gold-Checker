@@ -19,11 +19,19 @@ def analyze():
     
     latest_price = df['Close'].iloc[-1]
     latest_rsi = df['RSI'].iloc[-1]
+
+    # 3. 買い圧・売り圧の擬似計算
+    # RSIが50より高ければ買い圧が強いと仮定
+    # 実際の「板」データは無料APIがないため、センチメントスコアとして算出
+    buy_ratio = int(latest_rsi) 
+    if buy_ratio > 90: buy_ratio = 90 # 極端な値の防止
+    if buy_ratio < 10: buy_ratio = 10
     
-    # 3. 結果をJSONに保存 (GitHub Pages用)
+    # 4. 結果をJSONに保存
     result = {
         "price": round(latest_price, 2),
         "rsi": round(latest_rsi, 2),
+        "buy_ratio": buy_ratio,
         "update_time": pd.Timestamp.now(tz='Asia/Tokyo').strftime('%Y-%m-%d %H:%M')
     }
     with open('data.json', 'w') as f:

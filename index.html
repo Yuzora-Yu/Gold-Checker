@@ -1,32 +1,91 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Gold Analysis</title>
+    <title>XAU/USD Gold Analysis</title>
     <script src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+        body { background: #131722; color: white; font-family: sans-serif; margin: 0; overflow: hidden; }
+        .header { padding: 10px 20px; background: #1e222d; border-bottom: 1px solid #363c4e; }
+        #chart-container { height: calc(100vh - 60px); width: calc(100% - 80px); float: left; }
+        
+        /* 圧力ゲージのスタイル */
+        #pressure-panel {
+            width: 80px; height: calc(100vh - 60px); float: right;
+            background: #1e222d; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; border-left: 1px solid #363c4e;
+        }
+        .gauge-label { font-size: 11px; color: #aaa; margin: 5px 0; }
+        .gauge-container {
+            width: 25px; height: 300px; background: #363c4e; 
+            border-radius: 4px; overflow: hidden; display: flex; flex-direction: column;
+        }
+        #buy-bar { width: 100%; background: #089981; transition: height 0.8s ease-out; }
+        #sell-bar { width: 100%; background: #f23645; transition: height 0.8s ease-out; }
+        #pressure-value { font-size: 14px; font-weight: bold; margin-top: 10px; }
+    </style>
 </head>
-<body style="background: #131722; color: white;">
-    <h1>Gold (XAU/USD) Analysis</h1>
-    <div id="status">読み込み中...</div>
-    <div id="chart" style="height: 500px;"></div>
+<body>
+
+    <div class="header">
+        <span id="update-info">XAU/USD Gold Loading...</span>
+    </div>
+
+    <div id="chart-container"></div>
+
+    <div id="pressure-panel">
+        <div class="gauge-label">BUY</div>
+        <div class="gauge-container">
+            <div id="buy-bar" style="height: 50%;"></div>
+            <div id="sell-bar" style="height: 50%;"></div>
+        </div>
+        <div class="gauge-label">SELL</div>
+        <div id="pressure-value">--%</div>
+    </div>
 
     <script>
-        // TradingViewチャートの埋め込み
+        // TradingView ウィジェット初期化
         new TradingView.widget({
-            "container_id": "chart",
+            "container_id": "chart-container",
+            "autosize": true,
             "symbol": "OANDA:XAUUSD",
             "interval": "60",
+            "timezone": "Asia/Tokyo",
             "theme": "dark",
-            "autosize": true
+            "style": "1",
+            "locale": "ja",
+            "enable_publishing": false,
+            "hide_top_toolbar": false,
+            "withdateranges": true,
+            "save_image": false
         });
 
-        // GitHub Actionsが生成したJSONを読み込む
-        fetch('./data.json')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('status').innerHTML = 
-                    `最終更新: ${data.update_time} | 価格: $${data.price} | RSI: ${data.rsi}`;
-            });
+        // JSONデータの読み込みと反映
+        async function updateDashboard() {
+            try {
+                const response = await fetch('./data.json?' + new Date().getTime()); // キャッシュ回避
+                const data = await response.json();
+                
+                // ヘッダー情報の更新
+                document.getElementById('update-info').textContent = 
+                    `Gold: $${data.price} | RSI: ${data.rsi} | Last Update: ${data.update_time}`;
+                
+                // ゲージの更新
+                const buyPercent = data.buy_ratio;
+                const sellPercent = 100 - buyPercent;
+                
+                document.getElementById('buy-bar').style.height = buyPercent + '%';
+                document.getElementById('sell-bar').style.height = sellPercent + '%';
+                document.getElementById('pressure-value').textContent = buyPercent + '%';
+                document.getElementById('pressure-value').style.color = buyPercent > 50 ? '#089981' : '#f23645';
+                
+            } catch (e) {
+                console.error("データの読み込みに失敗しました", e);
+            }
+        }
+
+        updateDashboard();
+        setInterval(updateDashboard, 60000); // 1分ごとに画面表示を更新
     </script>
 </body>
 </html>

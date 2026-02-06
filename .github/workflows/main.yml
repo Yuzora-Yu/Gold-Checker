@@ -1,6 +1,6 @@
 name: Gold Update Bot
 on:
-  workflow_dispatch: # 手動実行のみに変更（自動起動を停止）
+  workflow_dispatch: # 手動実行のみ。自動で動かしたい場合はここにscheduleを追加。
 
 jobs:
   build:
