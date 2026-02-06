@@ -1,11 +1,16 @@
 {
-    "price": 4840.9,
-    "rsi": 47.95,
-    "deviation": -0.47,
-    "correlation": -0.75,
-    "score": 10,
+    "price": 4842.6,
+    "rsi": 45.79,
+    "deviation": -0.49,
+    "correlation": 0.0,
+    "score": 13,
+    "score_1h": 13,
+    "score_4h": 21,
+    "trend_4h": "下落",
+    "resistance": 5113.9,
+    "support": 4670.0,
     "status": "静観",
-    "reason": "トレンド転換待ち。待機。",
-    "buy_ratio": 47,
-    "update_time": "2026-02-06 13:52"
+    "reason": "長期は下落中。短期シグナル待ち。",
+    "buy_ratio": 45,
+    "update_time": "2026-02-06 14:22"
 }
