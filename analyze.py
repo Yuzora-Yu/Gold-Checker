@@ -5,94 +5,105 @@ import numpy as np
 import sys
 
 SYMBOL_GOLD = "GC=F"
-SYMBOL_DOLLAR = "DX=F"
+# ドル指数が取れない場合の予備を含めたリスト
+SYMBOL_DOLLAR_LIST = ["DX=F", "UUP", "CL=F"] # UUPはドル指数のETF
 
 def analyze():
-    # --- PHASE 1: APIデータ取得 ---
+    # --- Phase 1: データ取得 (Gold) ---
     try:
-        print(f"--- Phase 1: Fetching data for {SYMBOL_GOLD} and {SYMBOL_DOLLAR} ---")
-        gold = yf.Ticker(SYMBOL_GOLD)
-        dollar = yf.Ticker(SYMBOL_DOLLAR)
-        
-        df_gold = gold.history(period="5d", interval="1h")
-        df_dollar = dollar.history(period="5d", interval="1h")
-        
-        if df_gold.empty or df_dollar.empty:
-            raise ValueError("取得したデータが空です。市場が休場かAPIの制限の可能性があります。")
-        print("Data fetch successful.")
+        print(f"--- Phase 1: Fetching Gold Data ({SYMBOL_GOLD}) ---")
+        df_gold = yf.download(SYMBOL_GOLD, period="7d", interval="1h")
+        if df_gold.empty:
+            raise ValueError("金の価格データが空です。")
     except Exception as e:
-        print(f"[ERROR] API取得ミス: {e}")
-        sys.exit(1)
+        print(f"[ERROR] Gold Data Fetch Failed: {e}")
+        sys.exit(1) # 金が取れない場合は続行不可
 
-    # --- PHASE 2: テクニカル計算 ---
+    # --- Phase 1.5: データ取得 (Dollar Index / 予備含む) ---
+    df_dollar = pd.DataFrame()
+    correlation = 0
+    print("--- Phase 1.5: Fetching Dollar Data (Optional) ---")
+    for sym in SYMBOL_DOLLAR_LIST:
+        try:
+            temp_df = yf.download(sym, period="7d", interval="1h")
+            if not temp_df.empty:
+                df_dollar = temp_df
+                print(f"Success: Fetched dollar-related data from {sym}")
+                break
+        except:
+            continue
+    
+    # 相関計算（ドルが取れた場合のみ）
+    if not df_dollar.empty:
+        try:
+            combined = pd.concat([df_gold['Close'], df_dollar['Close']], axis=1).dropna()
+            if len(combined) > 1:
+                correlation = combined.corr().iloc[0, 1]
+        except:
+            correlation = 0
+
+    # --- Phase 2: テクニカル計算 (Gold) ---
     try:
-        print("--- Phase 2: Calculating technical indicators ---")
+        print("--- Phase 2: Technical Analysis ---")
+        close = df_gold['Close']
+        
         # RSI(14)
-        delta = df_gold['Close'].diff()
+        delta = close.diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-        rs = gain / loss
-        df_gold['RSI'] = 100 - (100 / (1 + rs))
+        rsi = 100 - (100 / (1 + (gain / loss)))
         
         # MA25 & Deviation
-        df_gold['MA25'] = df_gold['Close'].rolling(window=25).mean()
-        df_gold['Deviation'] = ((df_gold['Close'] - df_gold['MA25']) / df_gold['MA25']) * 100
+        ma25 = close.rolling(window=25).mean()
+        dev = ((close - ma25) / ma25) * 100
         
-        # ATR (Volatility)
+        # ATR
         high_low = df_gold['High'] - df_gold['Low']
-        high_close = np.abs(df_gold['High'] - df_gold['Close'].shift())
-        low_close = np.abs(df_gold['Low'] - df_gold['Close'].shift())
-        tr = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
-        df_gold['ATR'] = tr.rolling(window=14).mean()
+        atr = high_low.rolling(window=14).mean()
+
+        latest_price = float(close.iloc[-1])
+        latest_rsi = float(rsi.iloc[-1])
+        latest_dev = float(dev.iloc[-1])
+        atr_expanding = bool(atr.iloc[-1] > atr.iloc[-2])
         
-        correlation = df_gold['Close'].corr(df_dollar['Close'])
-        
-        latest_rsi = df_gold['RSI'].iloc[-1]
-        latest_dev = df_gold['Deviation'].iloc[-1]
-        atr_expanding = df_gold['ATR'].iloc[-1] > df_gold['ATR'].iloc[-2]
-        
-        print(f"Indicators: RSI={latest_rsi:.2f}, Dev={latest_dev:.2f}, Corr={correlation:.2f}")
     except Exception as e:
-        print(f"[ERROR] 計算ミス (テクニカル指標): {e}")
+        print(f"[ERROR] Calculations Failed: {e}")
         sys.exit(1)
 
-    # --- PHASE 3: スコアリング & AI判定 ---
+    # --- Phase 3: スコアリング ---
     try:
-        print("--- Phase 3: Scoring and Decision making ---")
+        print("--- Phase 3: Scoring ---")
+        # 簡易スコアロジック
         score = (50 - latest_rsi) * 1.5 + (latest_dev * -15)
-        if atr_expanding:
-            score *= 1.2
-        final_score = max(min(int(score), 100), -100)
+        if atr_expanding: score *= 1.2
+        final_score = int(max(min(score, 100), -100))
 
-        if final_score > 30:
-            status, reason = "押し目買い", f"RSI{int(latest_rsi)}。反発の兆候あり。"
-        elif final_score < -30:
-            status, reason = "戻り売り", f"乖離率{latest_dev:.1f}%。過熱感あり。"
-        else:
-            status, reason = "静観", "シグナル混合。待機推奨。"
+        if final_score > 30: status, reason = "押し目買い", f"RSI {latest_rsi:.1f}。反発の好機。"
+        elif final_score < -30: status, reason = "戻り売り", f"乖離率 {latest_dev:.1f}%。過熱感あり。"
+        else: status, reason = "静観", "シグナルなし。様子見。"
     except Exception as e:
-        print(f"[ERROR] 計算ミス (判定ロジック): {e}")
+        print(f"[ERROR] Scoring Failed: {e}")
         sys.exit(1)
 
-    # --- PHASE 4: 結果保存 ---
+    # --- Phase 4: JSON出力 ---
     try:
-        print("--- Phase 4: Saving results to data.json ---")
+        print("--- Phase 4: Updating data.json ---")
         result = {
-            "price": round(df_gold['Close'].iloc[-1], 2),
+            "price": round(latest_price, 2),
             "rsi": round(latest_rsi, 2),
             "deviation": round(latest_dev, 2),
-            "correlation": round(correlation, 2),
+            "correlation": round(float(correlation), 2) if not np.isnan(correlation) else 0,
             "score": final_score,
             "status": status,
             "reason": reason,
-            "buy_ratio": int(latest_rsi), # RSIを暫定的な買い圧として利用
+            "buy_ratio": int(latest_rsi),
             "update_time": pd.Timestamp.now(tz='Asia/Tokyo').strftime('%Y-%m-%d %H:%M')
         }
         with open('data.json', 'w', encoding='utf-8') as f:
             json.dump(result, f, ensure_ascii=False, indent=4)
-        print("Success: data.json updated.")
+        print("Update Completed Successfully.")
     except Exception as e:
-        print(f"[ERROR] ファイル書き込みミス: {e}")
+        print(f"[ERROR] JSON Output Failed: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":
