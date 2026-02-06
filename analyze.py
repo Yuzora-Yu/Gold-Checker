@@ -5,82 +5,96 @@ import numpy as np
 import sys
 
 SYMBOL_GOLD = "GC=F"
-# ドル指数が取れない場合の予備を含めたリスト
-SYMBOL_DOLLAR_LIST = ["DX=F", "UUP", "CL=F"] # UUPはドル指数のETF
+SYMBOL_DOLLAR_LIST = ["DX=F", "UUP", "CL=F"]
 
 def analyze():
-    # --- Phase 1: データ取得 (Gold) ---
+    # --- Phase 1: Gold データ取得 ---
     try:
         print(f"--- Phase 1: Fetching Gold Data ({SYMBOL_GOLD}) ---")
         df_gold = yf.download(SYMBOL_GOLD, period="7d", interval="1h")
         if df_gold.empty:
             raise ValueError("金の価格データが空です。")
+        
+        # MultiIndex (二重列) の解消
+        if isinstance(df_gold.columns, pd.MultiIndex):
+            df_gold.columns = df_gold.columns.get_level_values(0)
+            
+        print("Gold data fetched and flattened.")
     except Exception as e:
         print(f"[ERROR] Gold Data Fetch Failed: {e}")
-        sys.exit(1) # 金が取れない場合は続行不可
+        sys.exit(1)
 
-    # --- Phase 1.5: データ取得 (Dollar Index / 予備含む) ---
+    # --- Phase 1.5: Dollar データ取得 ---
     df_dollar = pd.DataFrame()
-    correlation = 0
-    print("--- Phase 1.5: Fetching Dollar Data (Optional) ---")
+    correlation = 0.0
     for sym in SYMBOL_DOLLAR_LIST:
         try:
             temp_df = yf.download(sym, period="7d", interval="1h")
             if not temp_df.empty:
+                if isinstance(temp_df.columns, pd.MultiIndex):
+                    temp_df.columns = temp_df.columns.get_level_values(0)
                 df_dollar = temp_df
-                print(f"Success: Fetched dollar-related data from {sym}")
                 break
         except:
             continue
     
-    # 相関計算（ドルが取れた場合のみ）
     if not df_dollar.empty:
         try:
+            # 終値同士を結合して相関計算
             combined = pd.concat([df_gold['Close'], df_dollar['Close']], axis=1).dropna()
             if len(combined) > 1:
-                correlation = combined.corr().iloc[0, 1]
+                correlation = float(combined.corr().iloc[0, 1])
         except:
-            correlation = 0
+            correlation = 0.0
 
-    # --- Phase 2: テクニカル計算 (Gold) ---
+    # --- Phase 2: テクニカル計算 ---
     try:
         print("--- Phase 2: Technical Analysis ---")
         close = df_gold['Close']
+        high = df_gold['High']
+        low = df_gold['Low']
         
-        # RSI(14)
+        # RSI(14) - スカラー値として抽出するために .item() を使用
         delta = close.diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-        rsi = 100 - (100 / (1 + (gain / loss)))
+        rsi_series = 100 - (100 / (1 + (gain / loss)))
         
         # MA25 & Deviation
-        ma25 = close.rolling(window=25).mean()
-        dev = ((close - ma25) / ma25) * 100
+        ma25_series = close.rolling(window=25).mean()
+        dev_series = ((close - ma25_series) / ma25_series) * 100
         
-        # ATR
-        high_low = df_gold['High'] - df_gold['Low']
-        atr = high_low.rolling(window=14).mean()
+        # ATR (簡易)
+        atr_series = (high - low).rolling(window=14).mean()
 
-        latest_price = float(close.iloc[-1])
-        latest_rsi = float(rsi.iloc[-1])
-        latest_dev = float(dev.iloc[-1])
-        atr_expanding = bool(atr.iloc[-1] > atr.iloc[-2])
+        # 最新値の抽出（警告回避のため .iloc[-1] の後に .item() を付与）
+        latest_price = float(close.iloc[-1].item())
+        latest_rsi = float(rsi_series.iloc[-1].item())
+        latest_dev = float(dev_series.iloc[-1].item())
         
+        # ボラティリティ拡大判定
+        # .item() を使うことで Series ではなく単一の bool 値として取得
+        current_atr = atr_series.iloc[-1].item()
+        prev_atr = atr_series.iloc[-2].item()
+        atr_expanding = bool(current_atr > prev_atr)
+        
+        print(f"Latest Price: {latest_price}, RSI: {latest_rsi:.2f}")
     except Exception as e:
         print(f"[ERROR] Calculations Failed: {e}")
+        import traceback
+        traceback.print_exc() # 詳細なエラー箇所を出力
         sys.exit(1)
 
     # --- Phase 3: スコアリング ---
     try:
         print("--- Phase 3: Scoring ---")
-        # 簡易スコアロジック
         score = (50 - latest_rsi) * 1.5 + (latest_dev * -15)
         if atr_expanding: score *= 1.2
         final_score = int(max(min(score, 100), -100))
 
-        if final_score > 30: status, reason = "押し目買い", f"RSI {latest_rsi:.1f}。反発の好機。"
+        if final_score > 30: status, reason = "押し目買い", f"RSI {latest_rsi:.1f}。反発の兆候あり。"
         elif final_score < -30: status, reason = "戻り売り", f"乖離率 {latest_dev:.1f}%。過熱感あり。"
-        else: status, reason = "静観", "シグナルなし。様子見。"
+        else: status, reason = "静観", "トレンド転換待ち。待機。"
     except Exception as e:
         print(f"[ERROR] Scoring Failed: {e}")
         sys.exit(1)
@@ -92,7 +106,7 @@ def analyze():
             "price": round(latest_price, 2),
             "rsi": round(latest_rsi, 2),
             "deviation": round(latest_dev, 2),
-            "correlation": round(float(correlation), 2) if not np.isnan(correlation) else 0,
+            "correlation": round(correlation, 2) if not np.isnan(correlation) else 0.0,
             "score": final_score,
             "status": status,
             "reason": reason,
