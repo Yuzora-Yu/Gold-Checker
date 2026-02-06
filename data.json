@@ -1,10 +1,10 @@
 {
-    "price": 4868.9,
-    "rsi": 52.86,
-    "deviation": 0.11,
-    "correlation": 0.0,
-    "score": -5,
-    "score_1h": -5,
+    "price": 4872.5,
+    "rsi": 53.18,
+    "deviation": 0.18,
+    "correlation": -0.33,
+    "score": -7,
+    "score_1h": -7,
     "score_4h": 19,
     "is_golden": false,
     "is_death": false,
@@ -14,6 +14,6 @@
     "support": 4670.0,
     "status": "静観",
     "reason": "長期は下落中。明確なシグナル待ち。",
-    "buy_ratio": 52,
-    "update_time": "2026-02-06 16:34"
+    "buy_ratio": 53,
+    "update_time": "2026-02-06 17:07"
 }
