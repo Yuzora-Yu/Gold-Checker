@@ -50,14 +50,13 @@ def analyze():
         except:
             correlation = 0.0
 
-    # --- Phase 2: テクニカル計算 (短期 & 長期 & S/R & 出来高) ---
+    # --- Phase 2: テクニカル計算 (短期 & 長期 & S/R) ---
     try:
         print("--- Phase 2: Technical Analysis ---")
         # 短期(1h)データ
         close_1h = df_gold['Close']
         high_1h = df_gold['High']
         low_1h = df_gold['Low']
-        vol_1h = df_gold['Volume']
         
         # 1h RSI(14)
         delta = close_1h.diff()
@@ -72,13 +71,9 @@ def analyze():
         # ATR (1h)
         atr_series = (high_1h - low_1h).rolling(window=14).mean()
 
-        # 【追加】出来高スパイク解析 (先行指標：大口の介入)
-        vol_sma = vol_1h.rolling(window=20).mean()
-        vol_spike = bool(vol_1h.iloc[-1].item() > vol_sma.iloc[-1].item() * 1.5)
-
-        # 長期(4h)トレンド計算
+        # 長期(4h)トレンド計算 (エラー箇所修正)
         close_4h = df_gold_4h['Close']
-        ma20_4h = close_4h.rolling(window=20).mean()
+        ma20_4h = close_4h.rolling(window=20).mean() # 4時間足20MA
         ma_long_val = ma20_4h.iloc[-1].item()
         trend_4h = "上昇" if close_4h.iloc[-1].item() > ma_long_val else "下落"
         
@@ -88,7 +83,7 @@ def analyze():
         loss_4h = (-delta_4h.where(delta_4h < 0, 0)).rolling(window=14).mean()
         rsi_4h_val = float((100 - (100 / (1 + (gain_4h / loss_4h)))).iloc[-1].item())
 
-        # レジスタンス・サポート算出
+        # レジスタンス・サポート算出 (直近48時間の最高値・最安値)
         resistance = float(high_1h.iloc[-48:].max().item())
         support = float(low_1h.iloc[-48:].min().item())
 
@@ -98,17 +93,17 @@ def analyze():
         latest_dev = float(dev_series.iloc[-1].item())
         atr_expanding = bool(atr_series.iloc[-1].item() > atr_series.iloc[-2].item())
         
-        print(f"Price: {latest_price}, VolSpike: {vol_spike}, Trend(4h): {trend_4h}")
+        print(f"Latest Price: {latest_price}, RSI(1h): {latest_rsi:.2f}, Trend(4h): {trend_4h}")
     except Exception as e:
         print(f"[ERROR] Calculations Failed: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)
 
-    # --- Phase 3: スコアリング & シグナル判定 ---
+    # --- Phase 3: スコアリング ---
     try:
         print("--- Phase 3: Scoring ---")
-        # 短期スコア
+        # 短期スコア (既存ロジックを維持)
         score_1h = (50 - latest_rsi) * 1.5 + (latest_dev * -15)
         if atr_expanding: score_1h *= 1.2
         final_score_1h = int(max(min(score_1h, 100), -100))
@@ -116,26 +111,16 @@ def analyze():
         # 長期スコア
         final_score_4h = int(max(min((50 - rsi_4h_val) * 2, 100), -100))
 
-        # 【追加】ゴールデン/デッドサイン (短期・長期の同調)
-        is_golden = (final_score_1h > 30 and trend_4h == "上昇")
-        is_death = (final_score_1h < -30 and trend_4h == "下落")
-
-        # AIコメント (長期トレンドを加味)
-        if is_golden:
-            status = "✨ GOLDEN SIGN"
-            reason = f"短期・長期の買い圧が同調。出来高スパイク: {'あり' if vol_spike else 'なし'}。"
-        elif is_death:
-            status = "💀 DEATH SIGN"
-            reason = f"短期・長期の売り圧が同調。出来高スパイク: {'あり' if vol_spike else 'なし'}。"
-        elif final_score_1h > 30:
+        # AIコメント
+        if final_score_1h > 30:
             status = "押し目買い"
-            reason = f"短期RSI {latest_rsi:.1f}。長期{trend_4h}トレンド内での反発。"
+            reason = f"短期RSI {latest_rsi:.1f}。長期{trend_4h}トレンドの中での反発。"
         elif final_score_1h < -30:
             status = "戻り売り"
-            reason = f"短期乖離 {latest_dev:.1f}%。長期{trend_4h}トレンド調整。"
+            reason = f"短期乖離 {latest_dev:.1f}%。長期{trend_4h}トレンド。過熱調整。"
         else:
             status = "静観"
-            reason = f"長期は{trend_4h}中。明確なシグナル待ち。"
+            reason = f"長期は{trend_4h}中。短期シグナル待ち。"
             
     except Exception as e:
         print(f"[ERROR] Scoring Failed: {e}")
@@ -152,9 +137,6 @@ def analyze():
             "score": final_score_1h,
             "score_1h": final_score_1h,
             "score_4h": final_score_4h,
-            "is_golden": is_golden,
-            "is_death": is_death,
-            "vol_spike": vol_spike,
             "trend_4h": trend_4h,
             "resistance": round(resistance, 2),
             "support": round(support, 2),

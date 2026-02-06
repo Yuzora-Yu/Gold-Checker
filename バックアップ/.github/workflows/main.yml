@@ -1,0 +1,33 @@
+name: Gold Update Bot
+on:
+  schedule:
+    # 日本時間 月曜〜金曜 09:00〜翌06:00 (15分おき)
+    # UTC換算: 月曜〜金曜 00:00〜21:00
+    - cron: '*/15 0-21 * * 1-5'
+  workflow_dispatch: # 手動実行ボタン
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # リポジトリへの書き込み権限を明示的に付与
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: |
+          pip install yfinance pandas numpy
+      - name: Run analysis with debug log
+        run: |
+          echo "Starting Gold Analysis Script..."
+          python analyze.py
+      - name: Commit and Push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data.json
+          # 変更がある場合のみコミット
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update Gold Data" && git push)
