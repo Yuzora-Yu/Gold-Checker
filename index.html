@@ -2,30 +2,23 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Prisma Gold Pro - Elite Dashboard</title>
+    <title>Prisma Gold Pro - Multi-Factor Analysis</title>
     <script src="https://s3.tradingview.com/tv.js"></script>
     <style>
         :root {
-            --bg-color: #131722;
-            --panel-bg: #1e222d;
-            --border-color: #363c4e;
-            --buy-color: #089981;
-            --sell-color: #f23645;
-            --cisd-color: #2196f3;
-            --vacuum-color: #ff9800;
-            --text-main: #d1d4dc;
-            --update-color: #ff9800;
+            --bg-color: #131722; --panel-bg: #1e222d; --border-color: #363c4e;
+            --buy-color: #089981; --sell-color: #f23645; --gold-color: #ff9800;
+            --text-main: #d1d4dc; --update-color: #ff9800; --cisd-color: #2196f3;
         }
 
         body { 
-            background: var(--bg-color); 
-            color: var(--text-main); 
+            background: var(--bg-color); color: var(--text-main); 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0; display: flex; flex-direction: column; height: 100vh;
             transition: all 0.5s ease;
         }
 
-        /* 既存のシグナル発光エフェクト */
+        /* シグナル発光エフェクト */
         body.golden-glow { box-shadow: inset 0 0 100px var(--buy-color); background-color: #052e21; }
         body.death-glow { box-shadow: inset 0 0 100px var(--sell-color); background-color: #3d0e14; }
         body.sync-active { box-shadow: inset 0 0 80px rgba(33, 150, 243, 0.2); }
@@ -40,7 +33,6 @@
         .score-label { font-size: 11px; color: #848e9c; margin-top: 5px; }
 
         .dashboard-main { display: flex; flex: 1; overflow: hidden; }
-
         .charts-container { display: flex; flex-direction: column; flex: 1; border-right: 1px solid var(--border-color); }
         #gold-chart { flex: 1.5; }
         .bottom-widgets { display: flex; height: 250px; border-top: 1px solid var(--border-color); }
@@ -54,24 +46,18 @@
         .card-value { font-size: 17px; font-weight: bold; font-family: monospace; }
 
         /* 同期インジケーター */
-        #sync-badge { 
-            padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold;
-            background: #363c4e; color: #848e9c; text-align: center; 
-        }
+        #sync-badge { padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; background: #363c4e; color: #848e9c; }
         #sync-badge.active { background: var(--cisd-color); color: white; animation: pulse 2s infinite; }
-
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        /* 既存の部品 */
+        /* 既存ゲージ */
         .gauge-container { width: 100%; height: 20px; background: #363c4e; border-radius: 10px; overflow: hidden; display: flex; margin: 8px 0; }
         #buy-bar { height: 100%; background: var(--buy-color); transition: width 0.8s ease; }
         #sell-bar { height: 100%; background: var(--sell-color); transition: width 0.8s ease; }
 
-        .update-input { width: 92%; background: #131722; border: 1px solid var(--border-color); color: white; font-size: 12px; padding: 5px; margin-bottom: 5px; border-radius: 4px; }
+        /* 手動更新 */
+        .update-input { width: 92%; background: #131722; border: 1px solid var(--border-color); color: white; padding: 5px; margin-bottom: 5px; border-radius: 4px; }
         .update-btn { width: 100%; background: var(--update-color); border: none; color: white; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        
-        body.chance-buy { background-color: #052e21; }
-        body.chance-sell { background-color: #3d0e14; }
     </style>
 </head>
 <body>
@@ -85,7 +71,7 @@
             <div id="score-4h" class="score-value">0</div>
             <div class="score-label">長期スコア (4H)</div>
         </div>
-        <div class="info-group" style="text-align: center;">
+        <div style="text-align: center;">
             <div id="price-display" style="font-size: 22px; font-weight: bold;">$0.00</div>
             <div id="sync-badge">5m/30m 同期: 待機</div>
         </div>
@@ -108,21 +94,20 @@
         </div>
 
         <div class="side-panel">
-            <div id="vol-spike-msg" style="color: var(--vacuum-color); font-weight: bold; font-size: 12px; display: none; text-align: center;">⚠️ 大口介入の兆候を検知</div>
+            <div id="vol-spike-msg" style="color: var(--gold-color); font-weight: bold; font-size: 11px; display: none; text-align: center;">⚠️ 大口介入の兆候検知</div>
 
             <div class="info-card" style="border-left-color: var(--cisd-color);">
                 <div class="card-label">① CISD (大口需給ゾーン)</div>
-                <div id="cisd-res" class="card-value" style="color: var(--sell-color); font-size: 15px;">Res: $0.00</div>
-                <div id="cisd-sup" class="card-value" style="color: var(--buy-color); font-size: 15px;">Sup: $0.00</div>
+                <div id="cisd-res" class="card-value" style="color: var(--sell-color);">$0.00</div>
+                <div id="cisd-sup" class="card-value" style="color: var(--buy-color);">$0.00</div>
             </div>
 
-            <div class="info-card" style="border-left-color: var(--vacuum-color);">
+            <div class="info-card" style="border-left-color: var(--gold-color);">
                 <div class="card-label">② 真空地帯 (加速エリア)</div>
                 <div id="vacuum-list" style="font-size: 13px; font-family: monospace;">検知なし</div>
             </div>
 
             <div class="pressure-section">
-                <div class="score-label" style="font-size: 10px; color: #848e9c;">市場勢力図 (BUY vs SELL)</div>
                 <div class="gauge-container">
                     <div id="buy-bar" style="width: 50%;"></div>
                     <div id="sell-bar" style="width: 50%;"></div>
@@ -154,79 +139,59 @@
                 const response = await fetch('./data.json?' + Date.now());
                 const data = await response.json();
 
-                // スコア & 価格
                 const s1h = data.score_1h;
-                const scoreElem1h = document.getElementById('main-score');
-                scoreElem1h.textContent = (s1h > 0 ? '+' : '') + s1h;
-                scoreElem1h.style.color = s1h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
+                document.getElementById('main-score').textContent = (s1h > 0 ? '+' : '') + s1h;
+                document.getElementById('main-score').style.color = s1h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
 
                 const s4h = data.score_4h;
-                const scoreElem4h = document.getElementById('score-4h');
-                scoreElem4h.textContent = (s4h > 0 ? '+' : '') + s4h;
-                scoreElem4h.style.color = s4h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
+                document.getElementById('score-4h').textContent = (s4h > 0 ? '+' : '') + s4h;
+                document.getElementById('score-4h').style.color = s4h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
 
                 document.getElementById('price-display').textContent = `$${data.price.toLocaleString()}`;
-                document.getElementById('last-update').textContent = data.update_time;
-
-                // プロフェッショナル指標の更新
                 document.getElementById('cisd-res').textContent = `Res: $${data.cisd_high}`;
                 document.getElementById('cisd-sup').textContent = `Sup: $${data.cisd_low}`;
                 document.getElementById('vacuum-list').innerHTML = data.vacuum_zones.length ? data.vacuum_zones.map(z => `<div>${z.from} - ${z.to}</div>`).join('') : "検知なし";
                 
                 const syncBadge = document.getElementById('sync-badge');
                 if (data.is_synced) {
-                    syncBadge.textContent = `✨ 同期中 (${data.sync_dir})`;
-                    syncBadge.classList.add('active');
-                    document.body.classList.add('sync-active');
+                    syncBadge.textContent = `✨ 同期中 (${data.sync_dir})`; syncBadge.classList.add('active'); document.body.classList.add('sync-active');
                 } else {
-                    syncBadge.textContent = "5m/30m 同期: 待機";
-                    syncBadge.classList.remove('active');
-                    document.body.classList.remove('sync-active');
+                    syncBadge.textContent = "5m/30m 同期: 待機"; syncBadge.classList.remove('active'); document.body.classList.remove('sync-active');
                 }
 
-                // シグナル発光 & 背景色変更
                 document.body.classList.remove('golden-glow', 'death-glow', 'chance-buy', 'chance-sell');
                 if (data.is_golden) document.body.classList.add('golden-glow');
                 else if (data.is_death) document.body.classList.add('death-glow');
-                else if (s1h >= 70) document.body.classList.add('chance-buy');
-                else if (s1h <= -70) document.body.classList.add('chance-sell');
 
-                // ゲージ & AIアドバイス
                 const buyP = data.buy_ratio;
                 document.getElementById('buy-bar').style.width = buyP + '%';
                 document.getElementById('sell-bar').style.width = (100 - buyP) + '%';
                 document.getElementById('pressure-text').textContent = `${buyP}% / ${100 - buyP}%`;
                 document.getElementById('ai-status').textContent = data.status;
                 document.getElementById('ai-reason').textContent = data.reason;
-                document.getElementById('ai-advice-card').style.borderLeftColor = s1h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
-                document.getElementById('vol-spike-msg').style.display = data.vol_spike ? 'block' : 'none';
+                document.getElementById('last-update').textContent = data.update_time;
 
             } catch (e) { console.error(e); }
         }
 
         async function triggerWorkflow() {
-            // ...
             const token = document.getElementById('gh-token').value;
             const status = document.getElementById('update-status');
             const btn = document.getElementById('btn-update');
             if (!token) { alert("GitHubトークンを入力してください"); return; }
-            localStorage.setItem('gh_pat', token);
-            status.textContent = "送信中..."; btn.disabled = true;
+            localStorage.setItem('gh_pat', token); status.textContent = "送信中..."; btn.disabled = true;
             try {
                 const response = await fetch(`https://api.github.com/repos/Yuzora-Yu/Gold-Checker/actions/workflows/main.yml/dispatches`, {
                     method: 'POST',
                     headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
                     body: JSON.stringify({ ref: 'main' })
                 });
-                if (response.status === 204) {
-                    status.textContent = "✅ 送信成功";
-                    setTimeout(() => { status.textContent = ""; btn.disabled = false; }, 10000);
-                } else { status.textContent = "❌ エラー"; btn.disabled = false; }
-            } catch (e) { status.textContent = "❌ 接続エラー"; btn.disabled = false; }
+                if (response.status === 204) { status.textContent = "✅ 送信成功"; setTimeout(() => { status.textContent = ""; btn.disabled = false; }, 10000); }
+                else { status.textContent = "❌ エラー"; btn.disabled = false; }
+            } catch (e) { status.textContent = "❌ 通信エラー"; btn.disabled = false; }
         }
 
-        refreshData();
-        setInterval(refreshData, 60000);
+        refreshData(); setInterval(refreshData, 60000);
     </script>
 </body>
 </html>
