@@ -1,11 +1,11 @@
 {
-    "price": 5075.6,
-    "rsi": 62.09,
-    "deviation": 0.23,
-    "correlation": -0.81,
-    "score": -21,
-    "score_1h": -21,
-    "score_4h": -15,
+    "price": 5076.3,
+    "rsi": 71.74,
+    "deviation": 0.22,
+    "correlation": 0.0,
+    "score": -35,
+    "score_1h": -35,
+    "score_4h": -18,
     "is_golden": false,
     "is_death": false,
     "vol_spike": false,
@@ -15,6 +15,10 @@
     "cisd_high": 5102.7,
     "cisd_low": 4991.3,
     "vacuum_zones": [
+        {
+            "from": 4926.8,
+            "to": 4942.9
+        },
         {
             "from": 4942.9,
             "to": 4959.0
@@ -28,6 +32,6 @@
     "sync_dir": "下落",
     "status": "静観",
     "reason": "長期は上昇。明確な同期または壁待ち。",
-    "buy_ratio": 62,
-    "update_time": "2026-02-11 17:27"
+    "buy_ratio": 71,
+    "update_time": "2026-02-11 18:13"
 }
