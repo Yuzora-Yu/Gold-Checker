@@ -1,11 +1,11 @@
 {
-    "price": 5082.0,
-    "rsi": 38.32,
-    "deviation": -0.27,
+    "price": 5084.9,
+    "rsi": 36.66,
+    "deviation": -0.21,
     "correlation": 0.0,
-    "score": 25,
-    "score_1h": 25,
-    "score_4h": -19,
+    "score": 23,
+    "score_1h": 23,
+    "score_4h": -21,
     "is_golden": false,
     "is_death": false,
     "vol_spike": false,
@@ -32,6 +32,6 @@
     "sync_dir": "下落",
     "status": "✨ 期待値最大化ポイント",
     "reason": "5m/30m同期。下落への加速注意。",
-    "buy_ratio": 38,
-    "update_time": "2026-02-12 20:06"
+    "buy_ratio": 36,
+    "update_time": "2026-02-12 20:54"
 }
