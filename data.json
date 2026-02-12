@@ -1,11 +1,11 @@
 {
-    "price": 5079.5,
-    "rsi": 37.69,
-    "deviation": -0.27,
-    "correlation": 0.0,
-    "score": 22,
-    "score_1h": 22,
-    "score_4h": 11,
+    "price": 5087.9,
+    "rsi": 41.04,
+    "deviation": -0.11,
+    "correlation": -0.88,
+    "score": 15,
+    "score_1h": 15,
+    "score_4h": -30,
     "is_golden": false,
     "is_death": false,
     "vol_spike": false,
@@ -13,25 +13,25 @@
     "resistance": 5144.5,
     "support": 5021.3,
     "cisd_high": 5102.7,
-    "cisd_low": 4991.3,
+    "cisd_low": 5092.0,
     "vacuum_zones": [
         {
-            "from": 4935.5,
-            "to": 4953.8
+            "from": 5002.3,
+            "to": 5011.3
         },
         {
-            "from": 4953.8,
-            "to": 4972.1
+            "from": 5011.3,
+            "to": 5020.2
         },
         {
-            "from": 4990.4,
-            "to": 5008.7
+            "from": 5118.9,
+            "to": 5127.8
         }
     ],
     "is_synced": true,
     "sync_dir": "下落",
     "status": "✨ 期待値最大化ポイント",
     "reason": "5m/30m同期。下落への加速注意。",
-    "buy_ratio": 37,
-    "update_time": "2026-02-12 13:02"
+    "buy_ratio": 41,
+    "update_time": "2026-02-12 14:41"
 }
