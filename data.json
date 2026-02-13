@@ -1,10 +1,10 @@
 {
-    "price": 4977.0,
-    "rsi": 32.03,
-    "deviation": -0.86,
+    "price": 4989.7,
+    "rsi": 34.82,
+    "deviation": -0.61,
     "correlation": "Error",
-    "score_1h": 39,
-    "score_4h": 25,
+    "score_1h": 31,
+    "score_4h": 21,
     "is_golden": false,
     "is_death": false,
     "vol_spike": false,
@@ -28,9 +28,9 @@
         }
     ],
     "is_synced": true,
-    "sync_dir": "下落",
+    "sync_dir": "上昇",
     "status": "✨ 期待値最大化ポイント",
-    "reason": "5m/30m同期。下落への加速注意。",
-    "buy_ratio": 32,
-    "update_time": "2026-02-13 15:47"
+    "reason": "5m/30m同期。上昇への加速注意。",
+    "buy_ratio": 34,
+    "update_time": "2026-02-13 16:37"
 }
