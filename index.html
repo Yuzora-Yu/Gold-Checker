@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Prisma Gold Pro - Elite Dashboard</title>
     <script src="https://s3.tradingview.com/tv.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --bg-color: #131722; --panel-bg: #1e222d; --border-color: #363c4e;
@@ -15,61 +14,58 @@
         body { 
             background: var(--bg-color); color: var(--text-main); 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0; display: flex; flex-direction: column; height: 100vh;
-            transition: all 0.5s ease; overflow: hidden;
+            margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+            transition: all 0.5s ease;
         }
 
-        /* スクリーンショット用コンテナ */
-        #capture-area { display: flex; flex-direction: column; height: 100%; width: 100%; background: var(--bg-color); }
+        /* 視覚エフェクト */
+        body.golden-glow { box-shadow: inset 0 0 100px var(--buy-color); background-color: #052e21; }
+        body.death-glow { box-shadow: inset 0 0 100px var(--sell-color); background-color: #3d0e14; }
+        body.sync-active { box-shadow: inset 0 0 80px rgba(33, 150, 243, 0.2); }
 
-        /* ヘッダー：情報の視認性強化 */
         .header-panel {
             display: flex; justify-content: center; align-items: center;
             padding: 15px; background: var(--panel-bg); border-bottom: 1px solid var(--border-color); gap: 40px;
         }
-        .score-display { text-align: center; }
-        .score-value { font-size: 38px; font-weight: bold; line-height: 1; }
-        .score-label { font-size: 11px; color: #848e9c; margin-top: 5px; text-transform: uppercase; }
+        .score-box { text-align: center; }
+        .score-val { font-size: 38px; font-weight: bold; line-height: 1; }
+        .score-lab { font-size: 11px; color: #848e9c; margin-top: 5px; text-transform: uppercase; }
 
         .dashboard-main { display: flex; flex: 1; overflow: hidden; }
+        #gold-chart { flex: 1; border-right: 1px solid var(--border-color); }
 
-        /* 左側：チャート (下部ウィジェットなし) */
-        .charts-container { display: flex; flex-direction: column; flex: 1; border-right: 1px solid var(--border-color); }
-        #gold-chart { flex: 2; }
-        #dxy-chart { height: 200px; border-top: 1px solid var(--border-color); }
-
-        /* 右側：サイドパネル */
         .side-panel { width: 320px; display: flex; flex-direction: column; background: var(--panel-bg); padding: 15px; gap: 12px; overflow-y: auto; }
-
-        .info-card { padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border-left: 4px solid #848e9c; position: relative; }
-        .card-label { font-size: 10px; color: #848e9c; margin-bottom: 4px; }
-        .card-value { font-size: 17px; font-weight: bold; font-family: monospace; }
+        .info-card { padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border-left: 4px solid #848e9c; }
+        .card-lab { font-size: 10px; color: #848e9c; margin-bottom: 4px; }
+        .card-val { font-size: 17px; font-weight: bold; font-family: monospace; }
         .card-desc { font-size: 10px; color: #b2b5be; margin-top: 4px; line-height: 1.2; }
 
-        /* 同期・発光エフェクト */
+        /* 同期インジケーター */
         #sync-badge { padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; background: #363c4e; color: #848e9c; }
         #sync-badge.active { background: var(--cisd-color); color: white; animation: pulse 2s infinite; }
-        body.golden-glow { box-shadow: inset 0 0 100px var(--buy-color); background-color: #052e21; }
-        body.death-glow { box-shadow: inset 0 0 100px var(--sell-color); background-color: #3d0e14; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+        /* 既存ゲージ */
+        .gauge-container { width: 100%; height: 20px; background: #363c4e; border-radius: 10px; overflow: hidden; display: flex; margin: 8px 0; }
+        #buy-bar { height: 100%; background: var(--buy-color); transition: width 0.8s ease; }
+        #sell-bar { height: 100%; background: var(--sell-color); transition: width 0.8s ease; }
 
         /* ボタン類 */
         .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
-        .action-btn { width: 100%; border: none; color: white; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; transition: opacity 0.2s; }
+        .action-btn { width: 100%; border: none; color: white; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
         .copy-btn { background: #5d606b; }
-        .update-btn { background: var(--update-color); }
-        .update-input { width: 92%; background: #131722; border: 1px solid var(--border-color); color: white; padding: 5px; margin-bottom: 4px; border-radius: 4px; font-size: 12px; }
+        .update-btn { background: var(--gold-color); }
+        .update-input { width: 92%; background: #131722; border: 1px solid var(--border-color); color: white; padding: 5px; margin-bottom: 4px; border-radius: 4px; font-size: 12px; outline: none; }
     </style>
 </head>
 <body>
 
-<div id="capture-area">
     <div class="header-panel">
-        <div class="score-display">
-            <div id="main-score" class="score-value">0</div>
+        <div class="score-box">
+            <div id="main-score" class="score-val">0</div>
             <div class="score-label">短期シグナル (1H)</div>
         </div>
-        <div class="score-display">
+        <div class="score-box">
             <div id="score-4h" class="score-value">0</div>
             <div class="score-label">長期トレンド (4H)</div>
         </div>
@@ -80,146 +76,148 @@
     </div>
 
     <div class="dashboard-main">
-        <div class="charts-container">
-            <div id="gold-chart"></div>
-            <div id="dxy-chart"></div>
-        </div>
+        <div id="gold-chart"></div>
 
         <div class="side-panel">
-            <div id="vol-spike-msg" style="color: var(--gold-color); font-weight: bold; font-size: 11px; display: none; text-align: center;">⚠️ 大口介入(出来高スパイク)検知</div>
+            <div id="vol-spike-msg" style="color: var(--gold-color); font-weight: bold; font-size: 11px; display: none; text-align: center;">⚠️ 大口介入(出来高スパイク)を検知</div>
 
             <div class="info-card" style="border-left-color: var(--cisd-color);">
-                <div class="card-label">① CISD (機関投資家の需給ゾーン)</div>
-                <div id="cisd-res" class="card-value" style="color: var(--sell-color);">$0.00</div>
-                <div id="cisd-sup" class="card-value" style="color: var(--buy-color);">$0.00</div>
-                <div class="card-desc">大口の注文が溜まっている壁。反発の起点。</div>
+                <div class="card-lab">① CISD (機関投資家の需給ポイント)</div>
+                <div id="cisd-res" class="card-val" style="color: var(--sell-color); font-size: 15px;">Res: $0.00</div>
+                <div id="cisd-sup" class="card-val" style="color: var(--buy-color); font-size: 15px;">Sup: $0.00</div>
+                <div class="card-desc">大口の注文が溜まっている壁。反発または加速の起点。</div>
             </div>
 
             <div class="info-card" style="border-left-color: var(--gold-color);">
-                <div class="card-label">② 真空地帯 (加速エリア)</div>
+                <div class="card-lab">② 真空地帯 (加速エリア)</div>
                 <div id="vacuum-list" style="font-size: 13px; font-family: monospace;">検知なし</div>
-                <div class="card-desc">出来高の薄い地帯。価格が加速しやすい領域。</div>
+                <div class="card-desc">出来高の極端に薄い地帯。価格が加速しやすい領域。</div>
             </div>
 
             <div class="info-card">
-                <div class="card-label">環境認識データ</div>
-                <div style="font-size: 12px; display: flex; justify-content: space-between;">
-                    <span>DXY相関: <span id="corr-val">0.00</span></span>
-                    <span>RSI: <span id="rsi-val">0</span></span>
+                <div class="card-lab">市場勢力図 (BUY vs SELL)</div>
+                <div class="gauge-container">
+                    <div id="buy-bar" style="width: 50%;"></div>
+                    <div id="sell-bar" style="width: 50%;"></div>
                 </div>
-                <div class="card-desc">逆相関(-1.0に近いほど正常)と過熱感。</div>
+                <div id="pressure-text" style="font-weight: bold; font-size: 12px; text-align: center;">50% / 50%</div>
+                <div class="card-desc" style="margin-top:5px; text-align:center;">DXY相関: <span id="corr-val">0.00</span> / RSI: <span id="rsi-val">0</span></div>
             </div>
 
             <div id="ai-advice-card" class="info-card">
                 <div id="ai-status" style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">解析中...</div>
-                <div id="ai-reason" style="font-size: 12px; line-height: 1.4; color: #b2b5be;">解析エンジン待機中。</div>
+                <div id="ai-reason" style="font-size: 12px; line-height: 1.4; color: #b2b5be;">データを読み込んでいます。</div>
             </div>
 
             <div class="btn-group">
-                <button onclick="copyToClipboard()" class="action-btn copy-btn">📋 画面をコピー (分析用)</button>
+                <button onclick="copyReport()" class="action-btn copy-btn">📋 AI分析用レポートをコピー</button>
                 
                 <div style="background: rgba(255, 255, 255, 0.05); padding: 8px; border-radius: 4px;">
-                    <input type="password" id="gh-token" class="update-input" placeholder="GitHub Token">
+                    <input type="password" id="gh-token" class="update-input" placeholder="GitHub Tokenを入力">
                     <button onclick="triggerWorkflow()" id="btn-update" class="action-btn update-btn">Bot手動実行</button>
                     <div id="update-status" style="font-size: 9px; color: var(--update-color); margin-top: 4px; text-align: center;">Update: <span id="last-update">----/--/-- --:--</span></div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    // TradingView widgets
-    new TradingView.widget({ "container_id": "gold-chart", "autosize": true, "symbol": "OANDA:XAUUSD", "interval": "15", "theme": "dark", "style": "1", "locale": "ja", "withdateranges": true });
-    new TradingView.widget({ "container_id": "dxy-chart", "autosize": true, "symbol": "CAPITALCOM:DXY", "interval": "15", "theme": "dark", "style": "2", "locale": "ja", "hide_top_toolbar": true, "hide_legend": true });
+    <script>
+        new TradingView.widget({ "container_id": "gold-chart", "autosize": true, "symbol": "OANDA:XAUUSD", "interval": "15", "theme": "dark", "style": "1", "locale": "ja", "withdateranges": true });
 
-    document.getElementById('gh-token').value = localStorage.getItem('gh_pat') || '';
+        let currentData = null;
+        document.getElementById('gh-token').value = localStorage.getItem('gh_pat') || '';
 
-    async function refreshData() {
-        try {
-            const response = await fetch('./data.json?' + Date.now());
-            const data = await response.json();
+        async function refreshData() {
+            try {
+                const res = await fetch('./data.json?' + Date.now());
+                currentData = await res.json();
 
-            // スコア・価格更新
-            const s1h = data.score_1h;
-            document.getElementById('main-score').textContent = (s1h > 0 ? '+' : '') + s1h;
-            document.getElementById('main-score').style.color = s1h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
+                // スコア更新
+                const s1h = currentData.score_1h;
+                const sElem1h = document.getElementById('main-score');
+                sElem1h.textContent = (s1h > 0 ? '+' : '') + s1h;
+                sElem1h.style.color = s1h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
 
-            const s4h = data.score_4h;
-            document.getElementById('score-4h').textContent = (s4h > 0 ? '+' : '') + s4h;
-            document.getElementById('score-4h').style.color = s4h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
+                const s4h = currentData.score_4h;
+                const sElem4h = document.getElementById('score-4h');
+                sElem4h.textContent = (s4h > 0 ? '+' : '') + s4h;
+                sElem4h.style.color = s4h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
 
-            document.getElementById('price-display').textContent = `$${data.price.toLocaleString()}`;
-            document.getElementById('corr-val').textContent = data.correlation;
-            document.getElementById('rsi-val').textContent = data.rsi;
-            document.getElementById('cisd-res').textContent = `Res: $${data.cisd_high}`;
-            document.getElementById('cisd-sup').textContent = `Sup: $${data.cisd_low}`;
-            document.getElementById('vacuum-list').innerHTML = data.vacuum_zones.length ? data.vacuum_zones.map(z => `<div>${z.from} - ${z.to}</div>`).join('') : "検知なし";
-            document.getElementById('last-update').textContent = data.update_time;
+                // 価格・相関等更新
+                document.getElementById('price-display').textContent = `$${currentData.price.toLocaleString()}`;
+                document.getElementById('corr-val').textContent = currentData.correlation;
+                document.getElementById('rsi-val').textContent = currentData.rsi;
+                document.getElementById('cisd-res').textContent = `Res: $${currentData.cisd_high}`;
+                document.getElementById('cisd-sup').textContent = `Sup: $${currentData.cisd_low}`;
+                document.getElementById('vacuum-list').innerHTML = currentData.vacuum_zones.length ? currentData.vacuum_zones.map(z => `<div>${z.from} - ${z.to}</div>`).join('') : "検知なし";
+                document.getElementById('last-update').textContent = currentData.update_time;
 
-            // 同期バッジ
-            const syncBadge = document.getElementById('sync-badge');
-            if (data.is_synced) {
-                syncBadge.textContent = `✨ 同期中 (${data.sync_dir})`; syncBadge.classList.add('active');
-            } else {
-                syncBadge.textContent = "5m/30m 同期: 待機"; syncBadge.classList.remove('active');
-            }
+                // 同期バッジ更新
+                const badge = document.getElementById('sync-badge');
+                if (currentData.is_synced) {
+                    badge.textContent = `✨ 同期中 (${currentData.sync_dir})`; badge.classList.add('active');
+                    document.body.classList.add('sync-active');
+                } else {
+                    badge.textContent = "5m/30m 同期: 待機"; badge.classList.remove('active');
+                    document.body.classList.remove('sync-active');
+                }
 
-            // シグナル発光
-            document.body.classList.remove('golden-glow', 'death-glow');
-            if (data.is_golden) document.body.classList.add('golden-glow');
-            else if (data.is_death) document.body.classList.add('death-glow');
+                // 発光エフェクト
+                document.body.classList.remove('golden-glow', 'death-glow');
+                if (currentData.is_golden) document.body.classList.add('golden-glow');
+                else if (currentData.is_death) document.body.classList.add('death-glow');
 
-            // AIアドバイス
-            document.getElementById('ai-status').textContent = data.status;
-            document.getElementById('ai-reason').textContent = data.reason;
-            document.getElementById('ai-advice-card').style.borderLeftColor = s1h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
-            document.getElementById('vol-spike-msg').style.display = data.vol_spike ? 'block' : 'none';
+                // ゲージ・アドバイス更新
+                const buyP = currentData.buy_ratio;
+                document.getElementById('buy-bar').style.width = buyP + '%';
+                document.getElementById('sell-bar').style.width = (100 - buyP) + '%';
+                document.getElementById('pressure-text').textContent = `${buyP}% / ${100 - buyP}%`;
+                
+                document.getElementById('ai-status').textContent = currentData.status;
+                document.getElementById('ai-reason').textContent = currentData.reason;
+                document.getElementById('ai-advice-card').style.borderLeftColor = s1h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
+                document.getElementById('vol-spike-msg').style.display = currentData.vol_spike ? 'block' : 'none';
 
-        } catch (e) { console.error(e); }
-    }
-
-    // スクリーンショット機能
-    async function copyToClipboard() {
-        const btn = document.querySelector('.copy-btn');
-        btn.textContent = "📸 生成中...";
-        try {
-            const canvas = await html2canvas(document.getElementById('capture-area'), {
-                backgroundColor: "#131722",
-                useCORS: true,
-                scale: 1.5 // 解像度アップ
-            });
-            canvas.toBlob(blob => {
-                const item = new ClipboardItem({ "image/png": blob });
-                navigator.clipboard.write([item]);
-                btn.textContent = "✅ コピー完了！";
-                setTimeout(() => btn.textContent = "📋 画面をコピー (分析用)", 3000);
-            });
-        } catch (err) {
-            console.error(err);
-            btn.textContent = "❌ 失敗";
+            } catch (e) { console.error(e); }
         }
-    }
 
-    async function triggerWorkflow() {
-        const token = document.getElementById('gh-token').value;
-        const status = document.getElementById('update-status');
-        const btn = document.getElementById('btn-update');
-        if (!token) { alert("GitHubトークンを入力してください"); return; }
-        localStorage.setItem('gh_pat', token); status.textContent = "送信中..."; btn.disabled = true;
-        try {
-            const response = await fetch(`https://api.github.com/repos/Yuzora-Yu/Gold-Checker/actions/workflows/main.yml/dispatches`, {
-                method: 'POST',
-                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ref: 'main' })
-            });
-            if (response.status === 204) {
-                status.textContent = "✅ 送信成功"; setTimeout(() => { status.textContent = "Update: " + document.getElementById('last-update').textContent; btn.disabled = false; }, 10000);
-            } else { status.textContent = "❌ エラー"; btn.disabled = false; }
-        } catch (e) { status.textContent = "❌ 接続エラー"; btn.disabled = false; }
-    }
+        // AI分析用レポートコピー機能
+        function copyReport() {
+            if (!currentData) return;
+            const report = `
+【Gold Analysis Report: ${currentData.update_time}】
+● Price: $${currentData.price} (Correlation: ${currentData.correlation})
+● Score: 1H(${currentData.score_1h}) / 4H(${currentData.score_4h})
+● Trend: 4H(${currentData.trend_4h}) / Sync(${currentData.is_synced ? currentData.sync_dir : 'NONE'})
+● CISD: Res($${currentData.cisd_high}) / Sup($${currentData.cisd_low})
+● Vacuum Zones: ${JSON.stringify(currentData.vacuum_zones)}
+● RSI/Dev: RSI(${currentData.rsi}) / Dev(${currentData.deviation}%)
+● AI Status: ${currentData.status} / ${currentData.reason}
+            `.trim();
+            navigator.clipboard.writeText(report);
+            alert("AI分析用レポートをコピーしました。スレッドに貼り付けてください。");
+        }
 
-    refreshData(); setInterval(refreshData, 60000);
-</script>
+        // 手動更新
+        async function triggerWorkflow() {
+            const token = document.getElementById('gh-token').value;
+            const status = document.getElementById('update-status');
+            const btn = document.getElementById('btn-update');
+            if (!token) { alert("GitHubトークンを入力してください"); return; }
+            localStorage.setItem('gh_pat', token); status.textContent = "送信中..."; btn.disabled = true;
+            try {
+                const response = await fetch(`https://api.github.com/repos/Yuzora-Yu/Gold-Checker/actions/workflows/main.yml/dispatches`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ref: 'main' })
+                });
+                if (response.status === 204) {
+                    status.textContent = "✅ 送信成功"; setTimeout(() => { status.textContent = "Update: " + currentData.update_time; btn.disabled = false; }, 10000);
+                } else { status.textContent = "❌ エラー"; btn.disabled = false; }
+            } catch (e) { status.textContent = "❌ 接続エラー"; btn.disabled = false; }
+        }
+
+        refreshData(); setInterval(refreshData, 60000);
+    </script>
 </body>
 </html>
