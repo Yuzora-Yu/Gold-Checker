@@ -54,7 +54,7 @@
         .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
         .action-btn { width: 100%; border: none; color: white; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
         .copy-btn { background: #5d606b; }
-        .update-btn { background: var(--gold-color); }
+        .update-btn { background: var(--update-color); }
         .update-input { width: 92%; background: #131722; border: 1px solid var(--border-color); color: white; padding: 5px; margin-bottom: 4px; border-radius: 4px; font-size: 12px; outline: none; }
     </style>
 </head>
@@ -63,11 +63,11 @@
     <div class="header-panel">
         <div class="score-box">
             <div id="main-score" class="score-val">0</div>
-            <div class="score-label">短期シグナル (1H)</div>
+            <div class="score-lab">短期シグナル (1H)</div>
         </div>
         <div class="score-box">
-            <div id="score-4h" class="score-value">0</div>
-            <div class="score-label">長期トレンド (4H)</div>
+            <div id="score-4h" class="score-val">0</div>
+            <div class="score-lab">長期トレンド (4H)</div>
         </div>
         <div style="text-align: center; border-left: 1px solid var(--border-color); padding-left: 20px;">
             <div id="price-display" style="font-size: 24px; font-weight: bold;">$0.00</div>
