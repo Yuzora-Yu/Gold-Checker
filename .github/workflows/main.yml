@@ -3,17 +3,19 @@ name: Gold Update Bot
 on:
   schedule:
     # （１）データ更新スケジュール (15分おき)
-    # 日本時間 月曜 08:00 (UTC 日曜 23:00) 〜 土曜 06:00 (UTC 金曜 21:00)
     - cron: '*/15 23 * * 0-4'   # 日曜23時台(JST月曜8時台)〜木曜23時台
     - cron: '*/15 0-21 * * 1-5' # 月曜0時〜金曜21時(JST土曜6時)まで
 
     # （２）X投稿スケジュール (60分おき / 毎時0分)
-    # 日本時間 月曜〜金曜 08:00 (UTC 日曜 23:00) 〜 金曜 24:00 (UTC 金曜 15:00)
     - cron: '0 23 * * 0-4'      # 日曜23時(JST月曜8時)〜木曜23時
     - cron: '0 0-15 * * 1-5'    # 月曜0時〜金曜15時(JST金曜24時)まで
 
   # 手動実行用 (この場合は ENABLE_POST が false になり投稿されません)
   workflow_dispatch:
+
+# 書き込み権限を明示
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -21,6 +23,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # 全履歴取得して競合回避
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -38,8 +42,7 @@ jobs:
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
           X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
           X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
-          # 手動実行ではなく、かつ「投稿用スケジュール(毎時0分)」に合致する場合のみ true に設定
-          ENABLE_POST: ${{ (github.event_name == 'schedule' && (github.event.schedule == '0 23 * * 0-4' || github.event.schedule == '0 0-15 * * 1-5')) && 'true' || 'false' }}
+          ENABLE_POST: ${{ github.event_name == 'schedule' && (github.event.schedule == '0 23 * * 0-4' || github.event.schedule == '0 0-15 * * 1-5') && 'true' || 'false' }}
         run: python analyze.py
 
       - name: Commit and push changes
@@ -47,5 +50,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add data.json
-          git commit -m "Update analysis data" || echo "No changes to commit"
-          git push
+          git commit -m "Update analysis data: $(date +'%Y-%m-%d %H:%M')" || echo "No changes to commit"
+          # 強制的に最新へリベースしてからプッシュ
+          git pull --rebase origin main
+          git push origin main

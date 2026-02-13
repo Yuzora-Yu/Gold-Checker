@@ -23,6 +23,7 @@ def analyze():
         if any(df.empty for df in [df_5m, df_30m, df_gold, df_gold_4h]):
             raise ValueError("一部の価格データが取得できませんでした。")
         
+        # MultiIndex (二重列) の解消
         for df in [df_5m, df_30m, df_gold, df_gold_4h]:
             if isinstance(df.columns, pd.MultiIndex):
                 df.columns = df.columns.get_level_values(0)
@@ -34,7 +35,7 @@ def analyze():
 
     # --- Phase 1.5: Dollar データ取得 & 相関計算 ---
     df_dollar = pd.DataFrame()
-    correlation = None
+    correlation = 0.0
     for sym in SYMBOL_DOLLAR_LIST:
         try:
             temp_df = yf.download(sym, period="7d", interval="1h")
@@ -52,7 +53,7 @@ def analyze():
             if len(combined) > 1:
                 correlation = float(combined.corr().iloc[0, 1])
         except:
-            correlation = None
+            correlation = 0.0
 
     # --- Phase 2: テクニカル & プロ解析 ---
     try:
@@ -65,7 +66,7 @@ def analyze():
         delta = close_1h.diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-        rsi_1h_series = 100 - (100 / (1 + (gain / loss)))
+        rsi_1h_series = 100 - (100 / (1 + (gain / loss.replace(0, np.nan)))) # ゼロ除算対策
         ma25_series = close_1h.rolling(window=25).mean()
         dev_series = ((close_1h - ma25_series) / ma25_series) * 100
         atr_series = (high_1h - low_1h).rolling(window=14).mean()
@@ -81,7 +82,7 @@ def analyze():
         delta_4h = close_4h.diff()
         gain_4h = (delta_4h.where(delta_4h > 0, 0)).rolling(window=14).mean()
         loss_4h = (-delta_4h.where(delta_4h < 0, 0)).rolling(window=14).mean()
-        rsi_4h_val = float((100 - (100 / (1 + (gain_4h / loss_4h)))).iloc[-1].item())
+        rsi_4h_val = float((100 - (100 / (1 + (gain_4h / loss_4h.replace(0, np.nan))))).iloc[-1].item())
 
         resistance = float(high_1h.iloc[-48:].max().item())
         support = float(low_1h.iloc[-48:].min().item())
@@ -91,7 +92,7 @@ def analyze():
         cisd_res = float(df_30m['High'][change_30m < -2 * std_30m].tail(1).item()) if not df_30m[change_30m < -2 * std_30m].empty else 0.0
         cisd_sup = float(df_30m['Low'][change_30m > 2 * std_30m].tail(1).item()) if not df_30m[change_30m > 2 * std_30m].empty else 0.0
 
-        hist, bin_edges = np.histogram(df_30m['Close'], bins=15, weights=df_30m['Volume'])
+        hist, bin_edges = np.histogram(df_30m['Close'].dropna(), bins=15, weights=df_30m['Volume'].dropna())
         avg_hist = np.mean(hist)
         vacuum_zones = [{"from": round(bin_edges[i], 1), "to": round(bin_edges[i+1], 1)} for i in range(len(hist)) if hist[i] < avg_hist * 0.3]
 
@@ -100,8 +101,8 @@ def analyze():
         is_synced = (trend_5m == trend_30m_fast)
 
         latest_price = float(close_1h.iloc[-1].item())
-        latest_rsi = float(rsi_1h_series.iloc[-1].item())
-        latest_dev = float(dev_series.iloc[-1].item())
+        latest_rsi = np.nan_to_num(float(rsi_1h_series.iloc[-1].item())) # NaN対策
+        latest_dev = np.nan_to_num(float(dev_series.iloc[-1].item()))
         atr_expanding = bool(atr_series.iloc[-1].item() > atr_series.iloc[-2].item())
         
     except Exception as e:
@@ -112,8 +113,8 @@ def analyze():
     try:
         score_1h = (50 - latest_rsi) * 1.5 + (latest_dev * -15)
         if atr_expanding: score_1h *= 1.2
-        final_score_1h = int(max(min(score_1h, 100), -100))
-        final_score_4h = int(max(min((50 - rsi_4h_val) * 2, 100), -100))
+        final_score_1h = int(np.nan_to_num(max(min(score_1h, 100), -100))) # NaN対策
+        final_score_4h = int(np.nan_to_num(max(min((50 - rsi_4h_val) * 2, 100), -100)))
 
         is_golden = (final_score_1h > 30 and trend_4h == "上昇")
         is_death = (final_score_1h < -30 and trend_4h == "下落")
@@ -132,7 +133,7 @@ def analyze():
     try:
         result = {
             "price": round(latest_price, 2), "rsi": round(latest_rsi, 2), "deviation": round(latest_dev, 2),
-            "correlation": round(correlation, 2) if (correlation is not None and not np.isnan(correlation)) else "Error",
+            "correlation": round(correlation, 2) if (correlation != 0 and not np.isnan(correlation)) else "Error",
             "score_1h": final_score_1h, "score_4h": final_score_4h,
             "is_golden": is_golden, "is_death": is_death, "vol_spike": vol_spike, "trend_4h": trend_4h,
             "resistance": round(resistance, 2), "support": round(support, 2),
@@ -143,6 +144,7 @@ def analyze():
         }
         with open('data.json', 'w', encoding='utf-8') as f:
             json.dump(result, f, ensure_ascii=False, indent=4)
+        print("Update Completed Successfully.")
     except Exception as e:
         print(f"[ERROR] JSON Output Failed: {e}"); sys.exit(1)
 

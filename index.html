@@ -98,7 +98,9 @@
                     <div id="sell-bar" style="width: 50%;"></div>
                 </div>
                 <div id="pressure-text" style="font-weight: bold; font-size: 12px; text-align: center;">50% / 50%</div>
-                <div class="card-desc" style="margin-top:5px; text-align:center;">DXY相関: <span id="corr-val" style="font-weight: bold;">0.00</span> / RSI: <span id="rsi-val">0</span></div>
+                <div class="card-desc" style="margin-top:5px; text-align:center;">
+                    DXY相関: <span id="corr-val" style="font-weight: bold;">0.00</span> / RSI: <span id="rsi-val">0</span>
+                </div>
             </div>
 
             <div id="ai-advice-card" class="info-card">
@@ -128,41 +130,43 @@
             try {
                 const res = await fetch('./data.json?' + Date.now());
                 currentData = await res.json();
+                
+                // 安全な要素アクセス用ヘルパー
+                const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
 
-                const s1h = currentData.score_1h;
-                const sElem1h = document.getElementById('main-score');
-                sElem1h.textContent = (s1h > 0 ? '+' : '') + s1h;
-                sElem1h.style.color = s1h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
-
-                const s4h = currentData.score_4h;
-                const sElem4h = document.getElementById('score-4h');
-                sElem4h.textContent = (s4h > 0 ? '+' : '') + s4h;
-                sElem4h.style.color = s4h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
-
-                document.getElementById('price-display').textContent = `$${currentData.price.toLocaleString()}`;
+                set('main-score', (currentData.score_1h > 0 ? '+' : '') + currentData.score_1h);
+                set('score-4h', (currentData.score_4h > 0 ? '+' : '') + currentData.score_4h);
+                set('price-display', `$${currentData.price.toLocaleString()}`);
 
                 const corrElem = document.getElementById('corr-val');
-                if (currentData.correlation === "Error") {
-                    corrElem.textContent = "Error";
-                    corrElem.style.color = "var(--sell-color)";
-                } else {
-                    corrElem.textContent = currentData.correlation;
-                    corrElem.style.color = "inherit";
+                if (corrElem) {
+                    if (currentData.correlation === "Error") {
+                        corrElem.textContent = "Error";
+                        corrElem.style.color = "var(--sell-color)";
+                    } else {
+                        corrElem.textContent = currentData.correlation;
+                        corrElem.style.color = "inherit";
+                    }
                 }
 
-                document.getElementById('rsi-val').textContent = currentData.rsi;
-                document.getElementById('cisd-res').textContent = `Res: $${currentData.cisd_high}`;
-                document.getElementById('cisd-sup').textContent = `Sup: $${currentData.cisd_low}`;
-                document.getElementById('vacuum-list').innerHTML = currentData.vacuum_zones.length ? currentData.vacuum_zones.map(z => `<div>${z.from} - ${z.to}</div>`).join('') : "検知なし";
-                document.getElementById('last-update').textContent = currentData.update_time;
+                set('rsi-val', currentData.rsi);
+                set('cisd-res', `Res: $${currentData.cisd_high}`);
+                set('cisd-sup', `Sup: $${currentData.cisd_low}`);
+                
+                const vList = document.getElementById('vacuum-list');
+                if(vList) vList.innerHTML = currentData.vacuum_zones.length ? currentData.vacuum_zones.map(z => `<div>${z.from} - ${z.to}</div>`).join('') : "検知なし";
+                
+                set('last-update', currentData.update_time);
 
                 const badge = document.getElementById('sync-badge');
-                if (currentData.is_synced) {
-                    badge.textContent = `✨ 同期中 (${currentData.sync_dir})`; badge.classList.add('active');
-                    document.body.classList.add('sync-active');
-                } else {
-                    badge.textContent = "5m/30m 同期: 待機"; badge.classList.remove('active');
-                    document.body.classList.remove('sync-active');
+                if (badge) {
+                    if (currentData.is_synced) {
+                        badge.textContent = `✨ 同期中 (${currentData.sync_dir})`; badge.classList.add('active');
+                        document.body.classList.add('sync-active');
+                    } else {
+                        badge.textContent = "5m/30m 同期: 待機"; badge.classList.remove('active');
+                        document.body.classList.remove('sync-active');
+                    }
                 }
 
                 document.body.classList.remove('golden-glow', 'death-glow');
@@ -170,16 +174,22 @@
                 else if (currentData.is_death) document.body.classList.add('death-glow');
 
                 const buyP = currentData.buy_ratio;
-                document.getElementById('buy-bar').style.width = buyP + '%';
-                document.getElementById('sell-bar').style.width = (100 - buyP) + '%';
-                document.getElementById('pressure-text').textContent = `${buyP}% / ${100 - buyP}%`;
+                const bBar = document.getElementById('buy-bar');
+                const sBar = document.getElementById('sell-bar');
+                if(bBar) bBar.style.width = buyP + '%';
+                if(sBar) sBar.style.width = (100 - buyP) + '%';
+                set('pressure-text', `${buyP}% / ${100 - buyP}%`);
                 
-                document.getElementById('ai-status').textContent = currentData.status;
-                document.getElementById('ai-reason').textContent = currentData.reason;
-                document.getElementById('ai-advice-card').style.borderLeftColor = s1h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
-                document.getElementById('vol-spike-msg').style.display = currentData.vol_spike ? 'block' : 'none';
+                set('ai-status', currentData.status);
+                set('ai-reason', currentData.reason);
+                
+                const aiCard = document.getElementById('ai-advice-card');
+                if(aiCard) aiCard.style.borderLeftColor = currentData.score_1h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
+                
+                const spikeMsg = document.getElementById('vol-spike-msg');
+                if(spikeMsg) spikeMsg.style.display = currentData.vol_spike ? 'block' : 'none';
 
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Refresh error:", e); }
         }
 
         function copyReport() {
@@ -201,7 +211,7 @@
             const status = document.getElementById('update-status');
             const btn = document.getElementById('btn-update');
             if (!token) { alert("GitHubトークンを入力してください"); return; }
-            localStorage.setItem('gh_pat', token); status.textContent = "送信中..."; btn.disabled = true;
+            localStorage.setItem('gh_pat', token); status.textContent = "🚀 実行リクエスト送信中..."; btn.disabled = true;
             try {
                 const response = await fetch(`https://api.github.com/repos/Yuzora-Yu/Gold-Checker/actions/workflows/main.yml/dispatches`, {
                     method: 'POST',
@@ -209,8 +219,10 @@
                     body: JSON.stringify({ ref: 'main' })
                 });
                 if (response.status === 204) {
-                    status.textContent = "✅ 送信成功"; setTimeout(() => { status.textContent = "Update: " + currentData.update_time; btn.disabled = false; }, 10000);
-                } else { status.textContent = "❌ エラー"; btn.disabled = false; }
+                    status.textContent = "⏳ 解析中... 反映まで約2分お待ちください";
+                    // 確実に反映されるまで待機してからボタンを戻す
+                    setTimeout(() => { status.textContent = "待機中"; btn.disabled = false; }, 120000);
+                } else { status.textContent = "❌ エラーが発生しました"; btn.disabled = false; }
             } catch (e) { status.textContent = "❌ 接続エラー"; btn.disabled = false; }
         }
 
