@@ -1,23 +1,19 @@
 {
-    "price": 5003.1,
-    "rsi": 65.04,
-    "deviation": 0.2,
-    "correlation": -0.73,
-    "score_1h": -30,
-    "score_4h": 22,
+    "price": 5025.2,
+    "rsi": 67.37,
+    "deviation": 0.68,
+    "correlation": "Error",
+    "score_1h": -36,
+    "score_4h": 14,
     "is_golden": false,
-    "is_death": false,
-    "vol_spike": true,
+    "is_death": true,
+    "vol_spike": false,
     "trend_4h": "下落",
-    "resistance": 5144.5,
+    "resistance": 5123.4,
     "support": 4900.0,
     "cisd_high": 4999.1,
     "cisd_low": 4945.6,
     "vacuum_zones": [
-        {
-            "from": 5006.2,
-            "to": 5020.7
-        },
         {
             "from": 5122.3,
             "to": 5136.8
@@ -25,8 +21,8 @@
     ],
     "is_synced": true,
     "sync_dir": "上昇",
-    "status": "✨ 期待値最大化ポイント",
-    "reason": "5m/30m同期。上昇への加速注意。",
-    "buy_ratio": 65,
-    "update_time": "2026-02-13 22:55"
+    "status": "💀 DEATH SIGN",
+    "reason": "短期・長期売り圧同調。需給レジスタンス $4999.1。",
+    "buy_ratio": 67,
+    "update_time": "2026-02-13 23:35"
 }
