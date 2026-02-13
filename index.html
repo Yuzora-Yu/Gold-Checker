@@ -18,7 +18,6 @@
             transition: all 0.5s ease;
         }
 
-        /* 視覚エフェクト */
         body.golden-glow { box-shadow: inset 0 0 100px var(--buy-color); background-color: #052e21; }
         body.death-glow { box-shadow: inset 0 0 100px var(--sell-color); background-color: #3d0e14; }
         body.sync-active { box-shadow: inset 0 0 80px rgba(33, 150, 243, 0.2); }
@@ -40,17 +39,14 @@
         .card-val { font-size: 17px; font-weight: bold; font-family: monospace; }
         .card-desc { font-size: 10px; color: #b2b5be; margin-top: 4px; line-height: 1.2; }
 
-        /* 同期インジケーター */
         #sync-badge { padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; background: #363c4e; color: #848e9c; }
         #sync-badge.active { background: var(--cisd-color); color: white; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        /* 既存ゲージ */
         .gauge-container { width: 100%; height: 20px; background: #363c4e; border-radius: 10px; overflow: hidden; display: flex; margin: 8px 0; }
         #buy-bar { height: 100%; background: var(--buy-color); transition: width 0.8s ease; }
         #sell-bar { height: 100%; background: var(--sell-color); transition: width 0.8s ease; }
 
-        /* ボタン類 */
         .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
         .action-btn { width: 100%; border: none; color: white; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
         .copy-btn { background: #5d606b; }
@@ -70,7 +66,8 @@
             <div class="score-lab">長期トレンド (4H)</div>
         </div>
         <div style="text-align: center; border-left: 1px solid var(--border-color); padding-left: 20px;">
-            <div id="price-display" style="font-size: 24px; font-weight: bold;">$0.00</div>
+            <div id="price-display" style="font-size: 24px; font-weight: bold; line-height: 1;">$0.00</div>
+            <div style="font-size: 9px; color: #848e9c; margin-bottom: 4px;">Yahoo Finance (金先物 GC=F)</div>
             <div id="sync-badge">5m/30m 同期: 待機</div>
         </div>
     </div>
@@ -101,7 +98,7 @@
                     <div id="sell-bar" style="width: 50%;"></div>
                 </div>
                 <div id="pressure-text" style="font-weight: bold; font-size: 12px; text-align: center;">50% / 50%</div>
-                <div class="card-desc" style="margin-top:5px; text-align:center;">DXY相関: <span id="corr-val">0.00</span> / RSI: <span id="rsi-val">0</span></div>
+                <div class="card-desc" style="margin-top:5px; text-align:center;">DXY相関: <span id="corr-val" style="font-weight: bold;">0.00</span> / RSI: <span id="rsi-val">0</span></div>
             </div>
 
             <div id="ai-advice-card" class="info-card">
@@ -132,7 +129,6 @@
                 const res = await fetch('./data.json?' + Date.now());
                 currentData = await res.json();
 
-                // スコア更新
                 const s1h = currentData.score_1h;
                 const sElem1h = document.getElementById('main-score');
                 sElem1h.textContent = (s1h > 0 ? '+' : '') + s1h;
@@ -143,16 +139,23 @@
                 sElem4h.textContent = (s4h > 0 ? '+' : '') + s4h;
                 sElem4h.style.color = s4h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
 
-                // 価格・相関等更新
                 document.getElementById('price-display').textContent = `$${currentData.price.toLocaleString()}`;
-                document.getElementById('corr-val').textContent = currentData.correlation;
+
+                const corrElem = document.getElementById('corr-val');
+                if (currentData.correlation === "Error") {
+                    corrElem.textContent = "Error";
+                    corrElem.style.color = "var(--sell-color)";
+                } else {
+                    corrElem.textContent = currentData.correlation;
+                    corrElem.style.color = "inherit";
+                }
+
                 document.getElementById('rsi-val').textContent = currentData.rsi;
                 document.getElementById('cisd-res').textContent = `Res: $${currentData.cisd_high}`;
                 document.getElementById('cisd-sup').textContent = `Sup: $${currentData.cisd_low}`;
                 document.getElementById('vacuum-list').innerHTML = currentData.vacuum_zones.length ? currentData.vacuum_zones.map(z => `<div>${z.from} - ${z.to}</div>`).join('') : "検知なし";
                 document.getElementById('last-update').textContent = currentData.update_time;
 
-                // 同期バッジ更新
                 const badge = document.getElementById('sync-badge');
                 if (currentData.is_synced) {
                     badge.textContent = `✨ 同期中 (${currentData.sync_dir})`; badge.classList.add('active');
@@ -162,12 +165,10 @@
                     document.body.classList.remove('sync-active');
                 }
 
-                // 発光エフェクト
                 document.body.classList.remove('golden-glow', 'death-glow');
                 if (currentData.is_golden) document.body.classList.add('golden-glow');
                 else if (currentData.is_death) document.body.classList.add('death-glow');
 
-                // ゲージ・アドバイス更新
                 const buyP = currentData.buy_ratio;
                 document.getElementById('buy-bar').style.width = buyP + '%';
                 document.getElementById('sell-bar').style.width = (100 - buyP) + '%';
@@ -181,24 +182,20 @@
             } catch (e) { console.error(e); }
         }
 
-        // AI分析用レポートコピー機能
         function copyReport() {
             if (!currentData) return;
             const report = `
 【Gold Analysis Report: ${currentData.update_time}】
-● Price: $${currentData.price} (Correlation: ${currentData.correlation})
+● Price: $${currentData.price} (取得元: GC=F)
 ● Score: 1H(${currentData.score_1h}) / 4H(${currentData.score_4h})
 ● Trend: 4H(${currentData.trend_4h}) / Sync(${currentData.is_synced ? currentData.sync_dir : 'NONE'})
 ● CISD: Res($${currentData.cisd_high}) / Sup($${currentData.cisd_low})
-● Vacuum Zones: ${JSON.stringify(currentData.vacuum_zones)}
-● RSI/Dev: RSI(${currentData.rsi}) / Dev(${currentData.deviation}%)
 ● AI Status: ${currentData.status} / ${currentData.reason}
             `.trim();
             navigator.clipboard.writeText(report);
-            alert("AI分析用レポートをコピーしました。スレッドに貼り付けてください。");
+            alert("AI分析用レポートをコピーしました。");
         }
 
-        // 手動更新
         async function triggerWorkflow() {
             const token = document.getElementById('gh-token').value;
             const status = document.getElementById('update-status');
