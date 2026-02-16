@@ -1,10 +1,10 @@
 {
-    "price": 5031.0,
-    "rsi": 68.93,
-    "deviation": 0.44,
+    "price": 5040.2,
+    "rsi": 71.66,
+    "deviation": 0.62,
     "correlation": "Error",
-    "score_1h": -34,
-    "score_4h": 16,
+    "score_1h": -41,
+    "score_4h": 13,
     "is_golden": false,
     "is_death": true,
     "vol_spike": false,
@@ -20,9 +20,9 @@
         }
     ],
     "is_synced": true,
-    "sync_dir": "下落",
+    "sync_dir": "上昇",
     "status": "💀 DEATH SIGN",
     "reason": "短期・長期売り圧同調。需給レジスタンス $5091.6。",
-    "buy_ratio": 68,
-    "update_time": "2026-02-16 10:13"
+    "buy_ratio": 71,
+    "update_time": "2026-02-16 10:19"
 }
