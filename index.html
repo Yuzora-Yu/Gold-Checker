@@ -8,7 +8,7 @@
         :root {
             --bg-color: #131722; --panel-bg: #1e222d; --border-color: #363c4e;
             --buy-color: #089981; --sell-color: #f23645; --gold-color: #ff9800;
-            --text-main: #d1d4dc; --update-color: #ff9800; --cisd-color: #2196f3;
+            --warn-color: #fbc02d; --text-main: #d1d4dc; --update-color: #ff9800; --cisd-color: #2196f3;
         }
 
         body { 
@@ -141,7 +141,7 @@
                 const corrElem = document.getElementById('corr-val');
                 if (corrElem) {
                     if (currentData.correlation === "Error") {
-                        corrElem.textContent = "Error";
+                        corrElem.textContent = "取得失敗";
                         corrElem.style.color = "var(--sell-color)";
                     } else {
                         corrElem.textContent = currentData.correlation;
@@ -184,7 +184,14 @@
                 set('ai-reason', currentData.reason);
                 
                 const aiCard = document.getElementById('ai-advice-card');
-                if(aiCard) aiCard.style.borderLeftColor = currentData.score_1h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
+                if(aiCard) {
+                    // 警告・注意が含まれる場合は黄色、それ以外はスコアに応じて赤・緑
+                    if (currentData.status.includes('⚠️') || currentData.status.includes('注意') || currentData.status.includes('逆行')) {
+                        aiCard.style.borderLeftColor = 'var(--warn-color)';
+                    } else {
+                        aiCard.style.borderLeftColor = currentData.score_1h > 0 ? 'var(--buy-color)' : 'var(--sell-color)';
+                    }
+                }
                 
                 const spikeMsg = document.getElementById('vol-spike-msg');
                 if(spikeMsg) spikeMsg.style.display = currentData.vol_spike ? 'block' : 'none';
@@ -194,16 +201,21 @@
 
         function copyReport() {
             if (!currentData) return;
+            
+            // 報告書として不適切な絵文字を除去
+            const cleanStatus = currentData.status.replace(/[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '').trim();
+            
             const report = `
 【Gold Analysis Report: ${currentData.update_time}】
 ● Price: $${currentData.price} (取得元: GC=F)
 ● Score: 1H(${currentData.score_1h}) / 4H(${currentData.score_4h})
 ● Trend: 4H(${currentData.trend_4h}) / Sync(${currentData.is_synced ? currentData.sync_dir : 'NONE'})
 ● CISD: Res($${currentData.cisd_high}) / Sup($${currentData.cisd_low})
-● AI Status: ${currentData.status} / ${currentData.reason}
+● AI Status: ${cleanStatus}
+● Reason: ${currentData.reason.replace(/[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '').trim()}
             `.trim();
             navigator.clipboard.writeText(report);
-            alert("AI分析用レポートをコピーしました。");
+            alert("報告書用テキストをコピーしました（絵文字除去済み）。");
         }
 
         async function triggerWorkflow() {
@@ -220,7 +232,6 @@
                 });
                 if (response.status === 204) {
                     status.textContent = "⏳ 解析中... 反映まで約2分お待ちください";
-                    // 確実に反映されるまで待機してからボタンを戻す
                     setTimeout(() => { status.textContent = "待機中"; btn.disabled = false; }, 120000);
                 } else { status.textContent = "❌ エラーが発生しました"; btn.disabled = false; }
             } catch (e) { status.textContent = "❌ 接続エラー"; btn.disabled = false; }

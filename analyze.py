@@ -109,22 +109,40 @@ def analyze():
         print(f"[ERROR] Calculations Failed: {e}")
         import traceback; traceback.print_exc(); sys.exit(1)
 
-    # --- Phase 3: スコアリング ---
+    # --- Phase 3: スコアリング (旧コードからの差し替え) ---
     try:
-        score_1h = (50 - latest_rsi) * 1.5 + (latest_dev * -15)
-        if atr_expanding: score_1h *= 1.2
-        final_score_1h = int(np.nan_to_num(max(min(score_1h, 100), -100))) # NaN対策
+        # 基本スコア計算（重みを微調整）
+        score_1h = (50 - latest_rsi) * 1.2 + (latest_dev * -10)
+        if atr_expanding: score_1h *= 1.1 # ボラ拡大時は勢いを重視
+        
+        final_score_1h = int(np.nan_to_num(max(min(score_1h, 100), -100)))
         final_score_4h = int(np.nan_to_num(max(min((50 - rsi_4h_val) * 2, 100), -100)))
 
-        is_golden = (final_score_1h > 30 and trend_4h == "上昇")
-        is_death = (final_score_1h < -30 and trend_4h == "下落")
+        # 判定ロジックのブラッシュアップ
+        is_golden = (final_score_1h > 35 and trend_4h == "上昇")
+        is_death = (final_score_1h < -35 and trend_4h == "下落")
 
-        if is_golden: status, reason = "✨ GOLDEN SIGN", f"短期・長期買い圧同調。需給サポート ${cisd_sup:.1f}。"
-        elif is_death: status, reason = "💀 DEATH SIGN", f"短期・長期売り圧同調。需給レジスタンス ${cisd_res:.1f}。"
-        elif is_synced: status, reason = "✨ 期待値最大化ポイント", f"5m/30m同期。{'上昇' if trend_5m==1 else '下落'}への加速注意。"
-        elif final_score_1h > 30: status, reason = "押し目買い", f"RSI {latest_rsi:.1f}。長期{trend_4h}トレンド内。"
-        else: status, reason = "静観", f"長期は{trend_4h}。明確な同期または壁待ち。"
-            
+        # シグナルの信頼性を高める「逆行チェック」
+        # 4Hトレンドと5m/30m同期の方向が一致しているか
+        dir_4h = 1 if trend_4h == "上昇" else -1
+        sync_dir_val = 1 if trend_5m == 1 else -1
+        trend_aligned = (dir_4h == sync_dir_val)
+
+        if is_golden:
+            status, reason = "✨ GOLDEN SIGN", f"長期上昇トレンド中の押し目完了。需給サポート ${cisd_sup:.1f}。"
+        elif is_death:
+            status, reason = "💀 DEATH SIGN", f"長期下落トレンド中の戻り売り局面。需給レジスタンス ${cisd_res:.1f}。"
+        elif is_synced:
+            if trend_aligned:
+                status, reason = "✨ 期待値最大化ポイント", f"長期{trend_4h}と同方向に短期同期。加速の可能性あり。"
+            else:
+                # ここが重要：逆行している場合は「期待値」と呼ばない
+                status, reason = "⚠️ 短期反発/調整中", f"長期{trend_4h}に逆行する短期同期。深追いは危険な局面。"
+        elif abs(final_score_1h) > 30:
+            status, reason = f"{'押し目買い' if final_score_1h > 0 else '戻り売り'}", f"RSI {latest_rsi:.1f}。長期{trend_4h}トレンド継続中。"
+        else:
+            status, reason = "静観", f"明確なシグナルなし。DXY相関({correlation:.2f})を注視しつつ壁待ち。"
+                
     except Exception as e:
         print(f"[ERROR] Scoring Failed: {e}"); sys.exit(1)
 

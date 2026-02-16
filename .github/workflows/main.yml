@@ -42,7 +42,8 @@ jobs:
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
           X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
           X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
-          ENABLE_POST: ${{ github.event_name == 'schedule' && (github.event.schedule == '0 23 * * 0-4' || github.event.schedule == '0 0-15 * * 1-5') && 'true' || 'false' }}
+          # スケジュール実行（schedule）であれば、どのcron設定であっても投稿を許可する
+          ENABLE_POST: ${{ github.event_name == 'schedule' && 'true' || 'false' }}
         run: python analyze.py
 
       - name: Commit and push changes
