@@ -1,8 +1,8 @@
 {
-    "price": 4891.4,
-    "rsi": 37.84,
+    "price": 4891.3,
+    "rsi": 37.82,
     "deviation": -1.08,
-    "correlation": "Error",
+    "correlation": -0.67,
     "score_1h": 27,
     "score_4h": 12,
     "is_golden": false,
@@ -24,5 +24,5 @@
     "status": "✨ 期待値最大化ポイント",
     "reason": "長期下落と同方向に短期同期。加速の可能性あり。",
     "buy_ratio": 37,
-    "update_time": "2026-02-18 08:38"
+    "update_time": "2026-02-18 08:53"
 }
