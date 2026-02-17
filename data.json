@@ -1,10 +1,10 @@
 {
-    "price": 4951.7,
-    "rsi": 28.93,
-    "deviation": -0.94,
+    "price": 4929.5,
+    "rsi": 25.01,
+    "deviation": -1.37,
     "correlation": -0.53,
-    "score_1h": 34,
-    "score_4h": 32,
+    "score_1h": 48,
+    "score_4h": 37,
     "is_golden": false,
     "is_death": false,
     "vol_spike": false,
@@ -15,18 +15,14 @@
     "cisd_low": 4997.4,
     "vacuum_zones": [
         {
-            "from": 4922.2,
-            "to": 4937.6
-        },
-        {
             "from": 5121.5,
             "to": 5136.8
         }
     ],
-    "is_synced": false,
-    "sync_dir": "上昇",
-    "status": "押し目買い",
-    "reason": "RSI 28.9。長期下落トレンド継続中。",
-    "buy_ratio": 28,
-    "update_time": "2026-02-17 19:35"
+    "is_synced": true,
+    "sync_dir": "下落",
+    "status": "✨ 期待値最大化ポイント",
+    "reason": "長期下落と同方向に短期同期。加速の可能性あり。",
+    "buy_ratio": 25,
+    "update_time": "2026-02-17 20:05"
 }
