@@ -1,10 +1,10 @@
 {
-    "price": 4904.0,
-    "rsi": 33.69,
-    "deviation": -1.3,
+    "price": 4909.6,
+    "rsi": 50.64,
+    "deviation": -1.09,
     "correlation": "Error",
-    "score_1h": 32,
-    "score_4h": 18,
+    "score_1h": 10,
+    "score_4h": 16,
     "is_golden": false,
     "is_death": false,
     "vol_spike": false,
@@ -16,8 +16,8 @@
     "vacuum_zones": [],
     "is_synced": false,
     "sync_dir": "上昇",
-    "status": "押し目買い",
-    "reason": "RSI 33.7。長期下落トレンド継続中。",
-    "buy_ratio": 33,
-    "update_time": "2026-02-18 03:34"
+    "status": "静観",
+    "reason": "明確なシグナルなし。DXY相関(0.00)を注視しつつ壁待ち。",
+    "buy_ratio": 50,
+    "update_time": "2026-02-18 04:34"
 }
