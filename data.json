@@ -1,36 +1,36 @@
 {
-    "price": 5153.9,
-    "rsi": 62.45,
-    "deviation": 0.92,
-    "correlation": -0.94,
-    "score_1h": -24,
-    "score_4h": -41,
+    "price": 5157.6,
+    "rsi": 76.89,
+    "deviation": 2.33,
+    "correlation": 0.38,
+    "score_1h": -55,
+    "score_4h": -58,
     "is_golden": false,
     "is_death": false,
     "vol_spike": false,
     "trend_4h": "上昇",
-    "resistance": 5198.8,
-    "support": 4982.0,
-    "cisd_high": 5131.0,
-    "cisd_low": 5157.0,
+    "resistance": 5183.3,
+    "support": 4925.9,
+    "cisd_high": 0.0,
+    "cisd_low": 5173.9,
     "vacuum_zones": [
         {
-            "from": 4950.8,
-            "to": 4968.3
+            "from": 5048.4,
+            "to": 5064.9
         },
         {
-            "from": 5107.8,
-            "to": 5125.2
+            "from": 5064.9,
+            "to": 5081.3
         },
         {
-            "from": 5125.2,
-            "to": 5142.7
+            "from": 5081.3,
+            "to": 5097.7
         }
     ],
-    "is_synced": true,
+    "is_synced": false,
     "sync_dir": "下落",
-    "status": "⚠️ 短期反発/調整中",
-    "reason": "長期上昇に逆行する短期同期。深追いは危険な局面。",
-    "buy_ratio": 62,
-    "update_time": "2026-02-23 16:41"
+    "status": "戻り売り",
+    "reason": "RSI 76.9。長期上昇トレンド継続中。",
+    "buy_ratio": 76,
+    "update_time": "2026-02-23 17:28"
 }
