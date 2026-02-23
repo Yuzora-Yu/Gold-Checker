@@ -1,10 +1,10 @@
 {
-    "price": 5171.4,
-    "rsi": 69.23,
-    "deviation": 0.75,
-    "correlation": -0.67,
-    "score_1h": -30,
-    "score_4h": -40,
+    "price": 5170.4,
+    "rsi": 44.66,
+    "deviation": 0.62,
+    "correlation": -0.63,
+    "score_1h": 0,
+    "score_4h": -54,
     "is_golden": false,
     "is_death": false,
     "vol_spike": false,
@@ -30,7 +30,7 @@
     "is_synced": false,
     "sync_dir": "下落",
     "status": "静観",
-    "reason": "明確なシグナルなし。DXY相関(-0.67)を注視しつつ壁待ち。",
-    "buy_ratio": 69,
-    "update_time": "2026-02-23 21:42"
+    "reason": "明確なシグナルなし。DXY相関(-0.63)を注視しつつ壁待ち。",
+    "buy_ratio": 44,
+    "update_time": "2026-02-23 22:55"
 }
