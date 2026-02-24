@@ -1,8 +1,8 @@
 {
-    "price": 5151.0,
-    "rsi": 19.72,
+    "price": 5151.5,
+    "rsi": 19.78,
     "deviation": -1.07,
-    "correlation": -0.04,
+    "correlation": -0.05,
     "score_1h": 51,
     "score_4h": -24,
     "is_golden": true,
@@ -21,10 +21,6 @@
         {
             "from": 5117.7,
             "to": 5134.9
-        },
-        {
-            "from": 5134.9,
-            "to": 5152.2
         }
     ],
     "is_synced": true,
@@ -32,5 +28,5 @@
     "status": "✨ GOLDEN SIGN",
     "reason": "長期上昇トレンド中の押し目完了。需給サポート $5185.1。",
     "buy_ratio": 19,
-    "update_time": "2026-02-24 22:58"
+    "update_time": "2026-02-24 23:04"
 }
