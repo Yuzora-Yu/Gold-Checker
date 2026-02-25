@@ -1,36 +1,36 @@
 {
-    "price": 5207.3,
-    "rsi": 77.28,
-    "deviation": 3.32,
-    "correlation": 0.38,
-    "score_1h": -65,
-    "score_4h": -62,
+    "price": 5207.0,
+    "rsi": 66.3,
+    "deviation": 0.45,
+    "correlation": -0.12,
+    "score_1h": -24,
+    "score_4h": -13,
     "is_golden": false,
     "is_death": false,
     "vol_spike": false,
     "trend_4h": "上昇",
-    "resistance": 5230.0,
-    "support": 4925.9,
-    "cisd_high": 0.0,
-    "cisd_low": 0.0,
+    "resistance": 5269.4,
+    "support": 5109.5,
+    "cisd_high": 5177.4,
+    "cisd_low": 5162.8,
     "vacuum_zones": [
         {
-            "from": 5209.2,
-            "to": 5210.1
+            "from": 5019.3,
+            "to": 5035.1
         },
         {
-            "from": 5210.1,
-            "to": 5211.0
+            "from": 5098.1,
+            "to": 5113.8
         },
         {
-            "from": 5211.0,
-            "to": 5211.9
+            "from": 5113.8,
+            "to": 5129.6
         }
     ],
-    "is_synced": true,
+    "is_synced": false,
     "sync_dir": "下落",
-    "status": "⚠️ 短期反発/調整中",
-    "reason": "長期上昇に逆行する短期同期。深追いは危険な局面。",
-    "buy_ratio": 77,
-    "update_time": "2026-02-25 16:45"
+    "status": "静観",
+    "reason": "明確なシグナルなし。DXY相関(-0.12)を注視しつつ壁待ち。",
+    "buy_ratio": 66,
+    "update_time": "2026-02-25 17:27"
 }
