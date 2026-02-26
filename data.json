@@ -1,7 +1,7 @@
 {
-    "price": 5210.7,
-    "rsi": 48.72,
-    "deviation": 0.07,
+    "price": 5211.9,
+    "rsi": 49.12,
+    "deviation": 0.1,
     "correlation": -0.1,
     "score_1h": 0,
     "score_4h": 10,
@@ -27,6 +27,6 @@
     "sync_dir": "下落",
     "status": "静観",
     "reason": "明確なシグナルなし。DXY相関(-0.10)を注視しつつ壁待ち。",
-    "buy_ratio": 48,
-    "update_time": "2026-02-26 15:33"
+    "buy_ratio": 49,
+    "update_time": "2026-02-26 15:46"
 }
