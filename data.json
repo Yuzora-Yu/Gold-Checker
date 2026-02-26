@@ -1,9 +1,9 @@
 {
-    "price": 5202.1,
-    "rsi": 39.46,
-    "deviation": -0.08,
+    "price": 5203.4,
+    "rsi": 39.83,
+    "deviation": -0.05,
     "correlation": -0.1,
-    "score_1h": 13,
+    "score_1h": 12,
     "score_4h": 13,
     "is_golden": false,
     "is_death": false,
@@ -28,5 +28,5 @@
     "status": "⚠️ 短期反発/調整中",
     "reason": "長期上昇に逆行する短期同期。深追いは危険な局面。",
     "buy_ratio": 39,
-    "update_time": "2026-02-26 16:37"
+    "update_time": "2026-02-26 16:44"
 }
